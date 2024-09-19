@@ -1,0 +1,212 @@
+esphome:
+  name: refrigerator-quad-temp-display
+  friendly_name: Refrigerator Quad Temp Display
+  # Automatically add the mac address to the name
+  # so you can use a single firmware for all devices
+    name_add_mac_suffix: false
+  
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    
+# Enable logging from the device serial and API.  uncomment verbose for debugging
+logger:
+#  level: VERBOSE
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "Key_From_Home_Assistant_Here"
+
+# OTA is required for Over-the-Air updating
+ota:
+  - platform: esphome
+    password: "your_password_here"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Refrigerator-Quad-Temp-Display"
+    password: "Set_SSID_Password_Here"
+
+# In combination with the `ap` this allows the user
+# to provision wifi credentials to the device.
+captive_portal:
+    
+#Support for the Display pins
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO19
+
+font:
+  - file: "fonts/Arial.ttf"
+    id: small_font
+    size: 20
+
+  - file: "fonts/Arial.ttf"
+    id: medium_font
+    size: 30
+
+  - file: "fonts/Arial.ttf"
+    id: tiny_font
+    size: 14
+
+# Set global value for when the battery level was low
+globals:
+  - id: last_low_battery_time
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+
+sensor:
+  - platform: homeassistant
+    name: "Main Fridge Temperature"
+    entity_id: sensor.main_fridge_a290_temperature
+    id: main_fridge_temp
+    unit_of_measurement: 'F'
+
+  - platform: homeassistant
+    name: "Main Freezer Temperature"
+    entity_id: sensor.atc_d936_temperature
+    id: main_freezer_temp
+
+  - platform: homeassistant
+    name: "Kitchen Temperature"
+    entity_id: sensor.kitchen_temperature
+    id: kitchen_temp
+
+  - platform: homeassistant
+    entity_id: sensor.office_temperature
+    id: office_temp
+    unit_of_measurement: 'F'
+
+  - platform: adc
+    pin: GPIO34
+    attenuation: auto
+    name: VBatt
+    id: vcc
+    update_interval: 60s
+    filters:
+      - multiply: 2  # Adjust for the voltage divider 2.02695
+
+  - platform: internal_temperature
+    name: "Internal Temperature"
+#    id: internal_temp
+#    update_interval: 60s  #update the sensor every 60 seconds
+#    on_value: 
+#      then:
+#        - lambda: 
+#            ESP_LOGI("internal_temp", std::string::format("Temperature: %.2f°C", x).c_str());
+
+  - platform: template
+    name: "Lilygo T-Display Battery Level"
+    id: batterylevel
+    unit_of_measurement: '%'
+    device_class: battery
+    update_interval: 60s
+    lambda: |-
+      // Mapping lithium-ion battery voltage to percentage
+      const float V_max = 4.2;
+      const float V_min = 3.0;
+      float voltage = id(vcc).state;
+      ESP_LOGI("battery", "Voltage: %.2f V", voltage);
+
+      // Clamp the voltage to be within the range to avoid any out-of-bounds values
+      //if (voltage > V_max) {
+      //  voltage = V_max;
+      //} else if (voltage < V_min) {
+      //  voltage = V_min;
+      //}
+  
+      // Calculate the percentage
+      float percentage = ((voltage - V_min) / (V_max - V_min)) * 100.0;
+      ESP_LOGI("battery", "Battery Level: %.2f%%", percentage);
+
+      // Trigger script to enter deep sleep if battery level is below 30%
+      if (percentage < 30) {
+        id(low_battery_script).execute();
+      }
+
+      return percentage;
+
+# Define deep sleep configuration
+deep_sleep:
+  id: deep_sleep_config
+#  sleep_duration: 
+#    seconds: 20
+#  wakeup_pin: GPIO0  # Change this to the correct GPIO number for your board's button
+#  wakeup_pin_mode: KEEP_AWAKE
+
+# the wakeup pin seems to break this.  it won't go to sleep when it's configured.
+
+# Script to delay and then enter deep sleep
+script:
+  - id: low_battery_script
+    then:
+      - delay: 3min  # Wait for 3 minutes
+      - deep_sleep.enter: deep_sleep_config
+
+
+# Define the GPIO pin for the onboard button
+binary_sensor:
+  - platform: gpio
+    pin: 
+      number: GPIO35  # Change this to the correct GPIO number for your board's button
+      mode: INPUT
+      inverted: true
+    name: "Sleep Button 1"
+#    id: onboard_button_1
+    on_press:
+      then:
+        - deep_sleep.enter: 
+            id: deep_sleep_config
+    internal: True
+
+color:
+  - id: color_green
+    green: 100%
+
+  - id: color_red
+    red: 100%
+
+display:
+  - platform: st7789v
+    model: TTGO TDisplay 135x240
+    cs_pin: GPIO5
+    dc_pin: GPIO16
+    reset_pin: GPIO23
+    backlight_pin: GPIO4
+    rotation: 0
+    
+    lambda: |-
+      it.fill(Color::BLACK);
+
+      int y_offset = 18;  // Starting Y position
+      int spacing = 57;   // Vertical spacing between entities
+      int line_spacing = 1; // Additional space between the temperature value and the horizontal line
+
+      it.printf(10, y_offset, id(small_font), id(color_green), "Main Fridge:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(main_fridge_temp).state);
+      it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
+
+      y_offset += spacing;
+      it.printf(10, y_offset, id(small_font), id(color_green), "Main Freezer:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(main_freezer_temp).state);
+      it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
+
+      y_offset += spacing;
+      it.printf(10, y_offset, id(small_font), id(color_green), "Kitchen:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(kitchen_temp).state);
+      it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
+
+      y_offset += spacing;
+      it.printf(10, y_offset, id(small_font), id(color_green), "Office:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(office_temp).state);
+
+      if (id(vcc).has_state()) {
+      it.printf(4, 4, id(tiny_font), id(color_red), "%.2f VBat  (%.1f %%)", id(vcc).state, id(batterylevel).state);
+      }
