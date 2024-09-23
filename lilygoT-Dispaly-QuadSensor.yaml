@@ -28,11 +28,6 @@ wifi:
   ap:
     ssid: "Fallback_AP"
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: "Refrigerator-Quad-Temp-Display"
-    password: "Set_SSID_Password_Here"
-
 # In combination with the `ap` this allows the user
 # to provision wifi credentials to the device.
 captive_portal:
