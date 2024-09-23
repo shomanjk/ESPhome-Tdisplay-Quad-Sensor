@@ -1,4 +1,4 @@
 # CHANGEME: Set these variable to your liking
 title: ESPHome Lilygo T-Display Quad Sensor Display
-description: Powered by ESPHome and Home Assistant
+description: Powered by ESPHome and ESP Web Tools, along with Home Assistant
 theme: jekyll-theme-slate
