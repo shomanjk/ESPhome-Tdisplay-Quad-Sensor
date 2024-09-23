@@ -18,7 +18,7 @@ jobs:
     uses: esphome/workflows/.github/workflows/build.yml@main
     with:
       files: |
-        lilygoT-Dispaly-QuadSensor.yaml
+        lilygoT-Display-QuadSensor.yaml
       esphome-version: 2024.7.3
       combined-name: firmware
       release-summary: ${{ github.event_name == 'release' && github.event.release.body || '' }}
