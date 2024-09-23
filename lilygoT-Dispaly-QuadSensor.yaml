@@ -22,8 +22,11 @@ ota:
     password: "your_password_here"
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  # Placeholder credentials (not used, but required for validation)
+  ssid: "your_wifi"
+  password: "your_password"
+  ap:
+    ssid: "Fallback_AP"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
