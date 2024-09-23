@@ -13,13 +13,10 @@ logger:
 
 # Enable Home Assistant API
 api:
-  encryption:
-    key: "Key_From_Home_Assistant_Here"
 
 # OTA is required for Over-the-Air updating
 ota:
   - platform: esphome
-    password: "your_password_here"
 
 wifi:
   # Placeholder credentials (not used, but required for validation)
