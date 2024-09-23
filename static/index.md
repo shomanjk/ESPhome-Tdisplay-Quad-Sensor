@@ -1,6 +1,6 @@
 # About
 
-Add some information about your project here.
+This project is designed to display 4 sensor values, each separated by a line, along with the voltage and battery level (very approximate, likely not accurate) on the lilygo T-Display screen using ESPhome.   This has not been tested with the T-Display S3 variant.
 
 # Installation
 
