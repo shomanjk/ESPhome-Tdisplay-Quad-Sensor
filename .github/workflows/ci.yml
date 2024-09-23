@@ -16,7 +16,7 @@ jobs:
       max-parallel: 3
       matrix:
         file:
-          - lilygoT-Dispaly-QuadSensor
+          - lilygoT-Display-QuadSensor
         esphome-version:
           - stable
           - beta
