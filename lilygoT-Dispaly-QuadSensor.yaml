@@ -1,9 +1,6 @@
 esphome:
   name: refrigerator-quad-temp-display
   friendly_name: Refrigerator Quad Temp Display
-  # Automatically add the mac address to the name
-  # so you can use a single firmware for all devices
-    name_add_mac_suffix: false
   
 esp32:
   board: esp32dev
