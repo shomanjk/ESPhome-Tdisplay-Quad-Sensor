@@ -6,7 +6,7 @@ easily install your project onto their device.
 
 This YAML is known to work with the original **Lilygo T-diplay**, and has not been tested on any of the T-Display *S3* variants.
 
-
+<img src="https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/blob/main/QuadSensor-Tdisplay.jpg?raw=true" alt="Quad Sensor Display screenshot" width="300"/>
  
 ## Instructions
 
@@ -14,5 +14,6 @@ This YAML is known to work with the original **Lilygo T-diplay**, and has not be
 2. Edit the YAML to replace the sensor names with those you want to pull from your Home Assistant.
    - Make sure to check `Include all branches` so that GitHub Pages is automatically enabled.
   
-I will update these instructions with more details at a future date.  Please feel free to recommend changes of course.
+The button at the bottom right of the display (when USB port is at the bottom) will put it into a deep sleep mode, and the button on the right side of the display will wake it back up.
 
+I will update these instructions with more details at a future date.  Please feel free to recommend changes of course.
