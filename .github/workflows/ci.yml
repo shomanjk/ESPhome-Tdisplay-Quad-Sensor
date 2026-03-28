@@ -9,25 +9,21 @@ concurrency:
 
 jobs:
   ci:
-    name: Building ${{ matrix.file }} / ${{ matrix.esphome-version }}
+    name: Build lilygoT-Display-QuadSensor / ESPHome ${{ matrix.esphome-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
-        file:
-          - lilygoT-Display-QuadSensor
         esphome-version:
-          - stable
-          - beta
-          - dev
+          - "2026.3.1" # minimum verified release
+          - stable # current stable (newer than minimum when available)
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4.1.7
       - name: Dummy secrets for CI
         run: cp secrets.yaml.example secrets.yaml
-      - name: ESPHome ${{ matrix.esphome-version }}
+      - name: ESPHome compile
         uses: esphome/build-action@v7.1.0
         with:
-          yaml-file: ${{ matrix.file }}.yaml
+          yaml-file: lilygoT-Display-QuadSensor.yaml
           version: ${{ matrix.esphome-version }}

@@ -1,15 +1,22 @@
+# ESPHome: 2026.3.1 or newer (see README).
 esphome:
   name: refrigerator-quad-temp-display
   friendly_name: Refrigerator Quad Temp Display
-  
+
 esp32:
   board: esp32dev
   framework:
     type: arduino
-    
-# Enable logging from the device serial and API.  uncomment verbose for debugging
+
+# Pin ADC component to ESPHome PR (deprecation / build fix); remove when merged.
+external_components:
+  - source: github://pr#7942
+    refresh: 30s
+    components:
+      - adc
+
 logger:
-#  level: VERBOSE
+  level: WARN
 
 # Enable Home Assistant API
 api:
@@ -27,24 +34,26 @@ wifi:
 # In combination with the `ap` this allows the user
 # to provision wifi credentials to the device.
 captive_portal:
-    
-#Support for the Display pins
+
+# Commenting out web server in case it causes more battery consumption
+# web_server:
+#   port: 80
+#   include_internal: true
+
+# Support for the Display pins
 spi:
   clk_pin: GPIO18
   mosi_pin: GPIO19
 
 font:
-  - file: "fonts/Arial.ttf"
-    id: small_font
-    size: 20
-
-  - file: "fonts/Arial.ttf"
-    id: medium_font
-    size: 30
-
-  - file: "fonts/Arial.ttf"
+  - file: "fonts/arial_11.bdf"
     id: tiny_font
-    size: 14
+
+  - file: "fonts/arial_16.bdf"
+    id: small_font
+
+  - file: "fonts/arial_24.bdf"
+    id: medium_font
 
 # Set global value for when the battery level was low
 globals:
@@ -62,7 +71,7 @@ sensor:
 
   - platform: homeassistant
     name: "Main Freezer Temperature"
-    entity_id: sensor.atc_d936_temperature
+    entity_id: sensor.main_freezer_temperature
     id: main_freezer_temp
 
   - platform: homeassistant
@@ -88,9 +97,9 @@ sensor:
     name: "Internal Temperature"
 #    id: internal_temp
 #    update_interval: 60s  #update the sensor every 60 seconds
-#    on_value: 
+#    on_value:
 #      then:
-#        - lambda: 
+#        - lambda:
 #            ESP_LOGI("internal_temp", std::string::format("Temperature: %.2f°C", x).c_str());
 
   - platform: template
@@ -100,25 +109,35 @@ sensor:
     device_class: battery
     update_interval: 60s
     lambda: |-
-      // Mapping lithium-ion battery voltage to percentage
-      const float V_max = 4.2;
-      const float V_min = 3.0;
+      if (!id(vcc).has_state()) {
+        return {};
+      }
+
       float voltage = id(vcc).state;
-      ESP_LOGI("battery", "Voltage: %.2f V", voltage);
 
-      // Clamp the voltage to be within the range to avoid any out-of-bounds values
-      //if (voltage > V_max) {
-      //  voltage = V_max;
-      //} else if (voltage < V_min) {
-      //  voltage = V_min;
-      //}
-  
-      // Calculate the percentage
-      float percentage = ((voltage - V_min) / (V_max - V_min)) * 100.0;
-      ESP_LOGI("battery", "Battery Level: %.2f%%", percentage);
+      // Clamp USB-powered readings
+      if (voltage > 4.2) voltage = 4.2;
+      if (voltage < 3.0) voltage = 3.0;
 
-      // Trigger script to enter deep sleep if battery level is below 30%
-      if (percentage < 30) {
+      float percentage = 0.0;
+
+      if (voltage >= 4.15) percentage = 100;
+      else if (voltage >= 4.05) percentage = 90;
+      else if (voltage >= 3.95) percentage = 80;
+      else if (voltage >= 3.85) percentage = 70;
+      else if (voltage >= 3.80) percentage = 60;
+      else if (voltage >= 3.75) percentage = 50;
+      else if (voltage >= 3.70) percentage = 40;
+      else if (voltage >= 3.65) percentage = 30;
+      else if (voltage >= 3.55) percentage = 20;
+      else if (voltage >= 3.40) percentage = 10;
+      else percentage = 5;
+
+      // Do NOT sleep if USB is present
+      if (!id(usb_power_present).state &&
+          percentage < 30 &&
+          id(last_low_battery_time) == 0) {
+        id(last_low_battery_time) = millis();
         id(low_battery_script).execute();
       }
 
@@ -127,7 +146,7 @@ sensor:
 # Define deep sleep configuration
 deep_sleep:
   id: deep_sleep_config
-#  sleep_duration: 
+#  sleep_duration:
 #    seconds: 20
 #  wakeup_pin: GPIO0  # Change this to the correct GPIO number for your board's button
 #  wakeup_pin_mode: KEEP_AWAKE
@@ -141,11 +160,10 @@ script:
       - delay: 3min  # Wait for 3 minutes
       - deep_sleep.enter: deep_sleep_config
 
-
 # Define the GPIO pin for the onboard button
 binary_sensor:
   - platform: gpio
-    pin: 
+    pin:
       number: GPIO35  # Change this to the correct GPIO number for your board's button
       mode: INPUT
       inverted: true
@@ -153,9 +171,19 @@ binary_sensor:
 #    id: onboard_button_1
     on_press:
       then:
-        - deep_sleep.enter: 
+        - deep_sleep.enter:
             id: deep_sleep_config
     internal: True
+
+  - platform: template
+    name: "USB Power Present"
+    id: usb_power_present
+    internal: true
+    lambda: |-
+      if (!id(vcc).has_state()) return false;
+
+      // TTGO T-Display: VBAT jumps above 4.3V when USB is present
+      return id(vcc).state > 4.3;
 
 color:
   - id: color_green
@@ -163,6 +191,10 @@ color:
 
   - id: color_red
     red: 100%
+
+  - id: color_yellow
+    red: 100%
+    green: 100%
 
 display:
   - platform: st7789v
@@ -172,7 +204,7 @@ display:
     reset_pin: GPIO23
     backlight_pin: GPIO4
     rotation: 0
-    
+
     lambda: |-
       it.fill(Color::BLACK);
 
@@ -180,24 +212,42 @@ display:
       int spacing = 57;   // Vertical spacing between entities
       int line_spacing = 1; // Additional space between the temperature value and the horizontal line
 
-      it.printf(10, y_offset, id(small_font), id(color_green), "Main Fridge:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "Main Fridge:");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(main_fridge_temp).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(10, y_offset, id(small_font), id(color_green), "Main Freezer:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "Main Freezer:");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(main_freezer_temp).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(10, y_offset, id(small_font), id(color_green), "Kitchen:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "Kitchen:");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(kitchen_temp).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(10, y_offset, id(small_font), id(color_green), "Office:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "Office:");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(office_temp).state);
 
-      if (id(vcc).has_state()) {
-      it.printf(4, 4, id(tiny_font), id(color_red), "%.2f VBat  (%.1f %%)", id(vcc).state, id(batterylevel).state);
+      if (id(batterylevel).has_state()) {
+        int pct = (int) id(batterylevel).state;
+        bool usb = id(usb_power_present).state;
+
+        int bx = 4, by = 4, bw = 32, bh = 12;
+        Color fill = (pct < 30) ? id(color_red) : id(color_green);
+
+        it.rectangle(bx, by, bw, bh, Color::WHITE);                 // outline
+        it.rectangle(bx + bw, by + bh / 3, 3, bh / 3, Color::WHITE); // terminal
+        it.filled_rectangle(bx + 1, by + 1,
+                             (bw - 2) * pct / 100,
+                             bh - 2,
+                             fill);
+
+        it.printf(bx + bw + 6, by, id(tiny_font),
+                  Color::WHITE, "%d%%", pct);
+
+        if (usb)
+          it.printf(bx + bw / 2 - 4, by - 10,
+                    id(tiny_font), id(color_yellow), "⚡");
       }

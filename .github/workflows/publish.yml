@@ -36,7 +36,8 @@ jobs:
         id: esphome-build
         with:
           yaml-file: lilygoT-Display-QuadSensor.yaml
-          version: 2024.7.3
+          # Minimum verified: 2026.3.1. Use stable so prebuilt firmware tracks current ESPHome releases.
+          version: stable
           complete-manifest: true
           release-summary: ${{ github.event_name == 'release' && github.event.release.body || '' }}
           release-url: ${{ github.event_name == 'release' && github.event.release.html_url || '' }}

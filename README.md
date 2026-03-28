@@ -6,6 +6,8 @@ easily install your project onto their device.
 
 This YAML is known to work with the original **Lilygo T-diplay**, and has not been tested on any of the T-Display *S3* variants.
 
+**ESPHome:** known good on **2026.3.1** and **newer** (including future stable releases). Older versions than 2026.3.1 are not supported (e.g. BDF fonts and `adc` behavior). GitHub **Pages** builds use **current stable** ESPHome so hosted firmware stays up to date; **CI** checks both **2026.3.1** and **stable**.
+
 <img src="https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/blob/main/QuadSensor-Tdisplay.jpg?raw=true" alt="Quad Sensor Display screenshot" width="300"/>
 
 ## One-click builds and secrets
