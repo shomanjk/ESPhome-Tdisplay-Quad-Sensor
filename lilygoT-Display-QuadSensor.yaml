@@ -1,4 +1,4 @@
-# ESPHome: 2026.3.1 or newer (see README).
+# ESPHome: use current stable; last verified on 2026.3.1 (see README).
 esphome:
   name: refrigerator-quad-temp-display
   friendly_name: Refrigerator Quad Temp Display
