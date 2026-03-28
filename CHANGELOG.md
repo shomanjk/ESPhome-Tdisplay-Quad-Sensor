@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-28
+
+First **stable** release. Supersedes prior **0.8 beta** GitHub pre-releases.
+
 ### Added
 
 - **`external_components`** pulling ESPHome `adc` from [PR #7942](https://github.com/esphome/esphome/pull/7942) (`github://pr#7942`) to address ADC deprecation / build issues on newer toolchains.
@@ -15,6 +19,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **GitHub Actions:** bump `actions/checkout` to **v6.0.2**, `actions/upload-artifact` / `actions/download-artifact` to **v7.0.0** / **v8.0.1**, `actions/upload-pages-artifact` to **v4.0.0**, `actions/configure-pages` to **v6.0.0**, and `actions/deploy-pages` to **v5.0.0** (Node.js 20 deprecation on older action pins).
 - **Publish workflow:** deploy to GitHub Pages on **push to `main`** (in addition to releases and `workflow_dispatch`) so the live site stays the Actions-built **`static/`** installer + `firmware/`, instead of going stale or being replaced by a branch-based Jekyll build of **README.md**.
 - **ESPHome versioning:** **2026.3.1** is the **minimum** verified release; **newer** ESPHome (e.g. current **stable**) is explicitly supported. **Publish** uses **`stable`** so GitHub Pages firmware tracks new releases. **CI** compiles against **`2026.3.1`** and **`stable`** (replacing the old **2024.7.3** pin-only setup).
 - **`logger`**: default verbosity set to **`WARN`** (was default / optional `VERBOSE` comment only).

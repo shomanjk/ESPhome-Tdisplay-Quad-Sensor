@@ -19,7 +19,7 @@ jobs:
           - stable # current stable (newer than minimum when available)
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v6.0.2
       - name: Dummy secrets for CI
         run: cp secrets.yaml.example secrets.yaml
       - name: ESPHome compile
