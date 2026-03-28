@@ -4,9 +4,22 @@ Four Home Assistant temperature entities, battery gauge, and a USB-power indicat
 
 ## Install prebuilt firmware (web)
 
-**[Open the installer page](https://shomanjk.github.io/ESPhome-Tdisplay-Quad-Sensor/)** — connect the T-Display over USB, use **Chrome** or **Edge**, and click the install button on that page ([Web Serial](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API) requirement; see [ESP Web Tools](https://esphome.github.io/esp-web-tools/)).
+1. Connect the T-Display over USB.
+2. Open the installer in **Chrome** or **Edge** ([Web Serial](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API); see [ESP Web Tools](https://esphome.github.io/esp-web-tools/)).
 
-If you **forked** this repo, use your own Pages URL after enabling Actions-based Pages: `https://<your-username>.github.io/<your-repo-name>/` (see below).
+Installer URL (clickable on GitHub; copy-paste if needed):
+
+https://shomanjk.github.io/ESPhome-Tdisplay-Quad-Sensor/
+
+That page is built from [`static/index.md`](static/index.md) by the [Publish workflow](.github/workflows/publish.yml) and includes the flash button plus `firmware/manifest.json` — it is **not** this README file.
+
+### If github.io shows this whole README but no install button
+
+**GitHub Pages** is almost certainly set to **Deploy from a branch** (for example **Build and deployment → Source: Deploy from a branch → `/ (root)`**). That makes Jekyll build the **repository root**, so the homepage becomes **README.md** and you will not get the [ESP Web Tools](https://esphome.github.io/esp-web-tools/) button or prebuilt binaries under `firmware/`.
+
+**Fix:** **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**. After the next successful [Publish](.github/workflows/publish.yml) run (every push to `main`, a release, or **Actions → Publish → Run workflow**), `https://<user>.github.io/<repo>/` should show the short **Installation** page with the install button.
+
+If you **forked** this repo, use your own Pages URL once Actions publishing works: `https://<your-username>.github.io/<your-repo-name>/`.
 
 ## Requirements
 
@@ -38,7 +51,7 @@ Four labeled rows (**Main Fridge**, **Main Freezer**, **Kitchen**, **Office**) w
 
 This repo deploys Pages with **GitHub Actions** (see [`.github/workflows/publish.yml`](.github/workflows/publish.yml)), not a `gh-pages` branch. In the fork: **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**.
 
-The workflow **builds** firmware on every push to `main` (and on releases). The site is **deployed** to Pages when you **publish a GitHub Release** or **manually run** the Publish workflow (**Actions → Publish → Run workflow**) on `main`.
+The workflow **builds** firmware on every push to `main` (and on releases). The site is **deployed** to Pages on **every push to `main`**, when you **publish a GitHub Release**, or when you **manually run** the Publish workflow (**Actions → Publish → Run workflow**) on `main`.
 
 ## Buttons and sleep
 

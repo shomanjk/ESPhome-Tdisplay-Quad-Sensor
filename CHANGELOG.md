@@ -15,6 +15,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **Publish workflow:** deploy to GitHub Pages on **push to `main`** (in addition to releases and `workflow_dispatch`) so the live site stays the Actions-built **`static/`** installer + `firmware/`, instead of going stale or being replaced by a branch-based Jekyll build of **README.md**.
 - **ESPHome versioning:** **2026.3.1** is the **minimum** verified release; **newer** ESPHome (e.g. current **stable**) is explicitly supported. **Publish** uses **`stable`** so GitHub Pages firmware tracks new releases. **CI** compiles against **`2026.3.1`** and **`stable`** (replacing the old **2024.7.3** pin-only setup).
 - **`logger`**: default verbosity set to **`WARN`** (was default / optional `VERBOSE` comment only).
 - **Main freezer** Home Assistant entity: **`sensor.main_freezer_temperature`** (was `sensor.atc_d936_temperature`). Forkers with a different freezer sensor should edit this line.

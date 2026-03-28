@@ -70,7 +70,8 @@ jobs:
 
   publish:
     name: Publish to GitHub Pages
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    # Deploy on every push to main so github.io serves static/index.md + firmware/, not a branch-built README.
+    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     needs:
       - build-firmware
