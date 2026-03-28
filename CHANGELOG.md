@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-03-29
+
+### Changed
+
+- **CI:** single compile job on ESPHome **`stable`** only (removed **2026.3.1** matrix leg).
+- **`esphome/build-action`** → **v7.2.0** in CI and Publish (nested Docker actions updated; addresses Node.js 20 deprecation warnings from older `docker/build-push-action` / `docker/setup-buildx-action` pins in **v7.1.0**).
+- **README / YAML header:** document **stable** as the supported path; **2026.3.1** called out as **last explicitly verified** ESPHome in this repo.
+
 ## [1.0.0] - 2026-03-28
 
 First **stable** release. Supersedes prior **0.8 beta** GitHub pre-releases.

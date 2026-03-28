@@ -32,11 +32,11 @@ jobs:
           if [ -z "$VERSION" ]; then VERSION="dev-$(date +'%Y%m%d-%H%M')"; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Build Firmware
-        uses: esphome/build-action@v7.1.0
+        uses: esphome/build-action@v7.2.0
         id: esphome-build
         with:
           yaml-file: lilygoT-Display-QuadSensor.yaml
-          # Minimum verified: 2026.3.1. Use stable so prebuilt firmware tracks current ESPHome releases.
+          # Prebuilt firmware tracks current stable; config last verified on ESPHome 2026.3.1 (see README).
           version: stable
           complete-manifest: true
           release-summary: ${{ github.event_name == 'release' && github.event.release.body || '' }}

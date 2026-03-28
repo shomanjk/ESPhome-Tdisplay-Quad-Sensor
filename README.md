@@ -1,6 +1,6 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
-**Release 1.0.0** — first stable release (see [CHANGELOG.md](CHANGELOG.md)). Create Git tag **`v1.0.0`** on the merge commit when you publish the release on GitHub.
+**Release 1.0.1** — patch after 1.0.0 (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.0.1`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
 
 Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
@@ -26,7 +26,7 @@ If you **forked** this repo, use your own Pages URL once Actions publishing work
 ## Requirements
 
 - **Hardware:** Original **LilyGO T-Display** (ESP32). This config has **not** been tested on T-Display *S3* or other variants.
-- **ESPHome:** **2026.3.1** or newer. Older releases are unsupported (BDF fonts and `adc` behavior differ). GitHub **Pages** builds use **current stable** ESPHome; **CI** compiles against **2026.3.1** and **stable**.
+- **ESPHome:** **Pages** and **CI** both compile with **current stable**. Treat **2026.3.1** as the **last explicitly verified** release in this repo; use **stable** locally and expect older ESPHome versions may fail (BDF fonts and `adc` behavior differ).
 - **Home Assistant:** The device uses the **native API** (`api:`). Edit [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) and set the four `entity_id` values (and `unit_of_measurement` if you do not use °F) to match your entities.
 
 ## What appears on the display
