@@ -13,17 +13,42 @@ on:
     types: [published]
 
 jobs:
+  # Inline build (not esphome/workflows reusable) so we can `cp secrets.yaml.example secrets.yaml`
+  # before compile; lilygoT-Display-QuadSensor.yaml uses !secret for Wi‑Fi.
   build-firmware:
     name: Build Firmware
-    uses: esphome/workflows/.github/workflows/build.yml@main
-    with:
-      files: |
-        lilygoT-Display-QuadSensor.yaml
-      esphome-version: 2024.7.3
-      combined-name: firmware
-      release-summary: ${{ github.event_name == 'release' && github.event.release.body || '' }}
-      release-url: ${{ github.event_name == 'release' && github.event.release.html_url || '' }}
-      release-version: ${{ (github.event_name == 'release' && github.event.release.tag_name) || (github.event_name == 'workflow_dispatch' && inputs.version) || '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4.1.7
+      - name: Dummy secrets for CI
+        run: cp secrets.yaml.example secrets.yaml
+      - name: Firmware version
+        id: version
+        run: |
+          VERSION="${{ github.event_name == 'release' && github.event.release.tag_name || (github.event_name == 'workflow_dispatch' && inputs.version || '') }}"
+          if [ -z "$VERSION" ]; then VERSION="dev-$(date +'%Y%m%d-%H%M')"; fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Build Firmware
+        uses: esphome/build-action@v7.1.0
+        id: esphome-build
+        with:
+          yaml-file: lilygoT-Display-QuadSensor.yaml
+          version: 2024.7.3
+          complete-manifest: true
+          release-summary: ${{ github.event_name == 'release' && github.event.release.body || '' }}
+          release-url: ${{ github.event_name == 'release' && github.event.release.html_url || '' }}
+      - name: Stage versioned output
+        run: |
+          mkdir -p "output/${{ steps.version.outputs.version }}"
+          mv "${{ steps.esphome-build.outputs.name }}"/* "output/${{ steps.version.outputs.version }}/"
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: firmware
+          path: output
 
   build-site:
     name: Build Site
