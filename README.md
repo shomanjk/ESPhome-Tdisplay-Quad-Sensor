@@ -1,30 +1,51 @@
-# ESPHome Project for using Lilygo T-Display ESP32 device for showing 4 sensor values from Home Assistant on the display
+# ESPHome: LilyGO T-Display quad sensor dashboard
 
-It includes a GitHub workflow that will automatically build the configuration(s) and then deploys a simple 
-website via GitHub pages that utilises [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for users to 
-easily install your project onto their device.
+Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
-This YAML is known to work with the original **Lilygo T-diplay**, and has not been tested on any of the T-Display *S3* variants.
+## Requirements
 
-**ESPHome:** known good on **2026.3.1** and **newer** (including future stable releases). Older versions than 2026.3.1 are not supported (e.g. BDF fonts and `adc` behavior). GitHub **Pages** builds use **current stable** ESPHome so hosted firmware stays up to date; **CI** checks both **2026.3.1** and **stable**.
+- **Hardware:** Original **LilyGO T-Display** (ESP32). This config has **not** been tested on T-Display *S3* or other variants.
+- **ESPHome:** **2026.3.1** or newer. Older releases are unsupported (BDF fonts and `adc` behavior differ). GitHub **Pages** builds use **current stable** ESPHome; **CI** compiles against **2026.3.1** and **stable**.
+- **Home Assistant:** The device uses the **native API** (`api:`). Edit [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) and set the four `entity_id` values (and `unit_of_measurement` if you do not use °F) to match your entities.
 
-<img src="https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/blob/main/QuadSensor-Tdisplay.jpg?raw=true" alt="Quad Sensor Display screenshot" width="300"/>
+## What appears on the display
+
+Four labeled rows (**Main Fridge**, **Main Freezer**, **Kitchen**, **Office**) with live values, a **battery** outline with fill and percentage, and a yellow **⚡** when USB power is detected (TTGO T-Display behavior).
+
+<img src="QuadSensor-Tdisplay.jpg" alt="Quad Sensor Display screenshot" width="300"/>
 
 ## One-click builds and secrets
 
-`lilygoT-Display-QuadSensor.yaml` uses ESPHome’s usual pattern for Wi‑Fi: `ssid` and `password` are `!secret wifi_ssid` and `!secret wifi_password`.
+[`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) uses `!secret wifi_ssid` and `!secret wifi_password` for Wi‑Fi—those are the **only** secrets referenced by the published YAML.
 
-- **Visitors** can still install **prebuilt** firmware from GitHub Pages; they do not need a `secrets.yaml` on their machine.
-- **CI and Pages** copy `secrets.yaml.example` to `secrets.yaml` before compile so builds use **dummy** Wi‑Fi strings and never touch your real network.
+- **Visitors** can flash **prebuilt** firmware from GitHub Pages without a local `secrets.yaml`.
+- **CI and Pages** run `cp secrets.yaml.example secrets.yaml` before compile so automation uses **dummy** Wi‑Fi strings.
 
-**Never commit** a real `secrets.yaml`. It is **gitignored**. For **local** `esphome compile` / dashboard, copy `secrets.yaml.example` → `secrets.yaml` and set your real `wifi_ssid` / `wifi_password`. Optional keys in the example (API encryption, OTA, AP password) are only used if you add matching `!secret` lines to your YAML.
+**Never commit** a real `secrets.yaml` (it is **gitignored**). For local `esphome compile` or the dashboard, copy [`secrets.yaml.example`](secrets.yaml.example) to `secrets.yaml` and set real Wi‑Fi values. The example also lists optional keys (API encryption, OTA, AP password); they take effect only if **you** add matching `!secret` references in your YAML (the public config intentionally keeps API/OTA open for easy prebuilt flashing).
 
 ## Instructions
 
-1. Visit https://shomanjk.github.io/ESPhome-Tdisplay-Quad-Sensor/ to install this firmware to your Lilygo T-Display
-2. If you build locally: copy `secrets.yaml.example` to `secrets.yaml` and set Wi‑Fi (and any other secrets you reference). Edit the YAML to replace the sensor `entity_id` values with those you use in Home Assistant.
-   - Make sure to check `Include all branches` so that GitHub Pages is automatically enabled.
-  
-The button at the bottom right of the display (when USB port is at the bottom) will put it into a *deep sleep mode*, and the button on the right side of the display will wake it back up.
+1. Open the install page (upstream example: `https://shomanjk.github.io/ESPhome-Tdisplay-Quad-Sensor/`). If you **forked** this repo, use `https://<your-username>.github.io/<your-repo-name>/` after Pages is enabled (see below).
+2. **Local builds:** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard with this YAML). Replace the sensor `entity_id` values with your Home Assistant entities.
 
-I will update these instructions with more details at a future date.  Please feel free to recommend changes of course.
+### If you fork: enable GitHub Pages
+
+This repo deploys Pages with **GitHub Actions** (see [`.github/workflows/publish.yml`](.github/workflows/publish.yml)), not a `gh-pages` branch. In the fork: **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**.
+
+The workflow **builds** firmware on every push to `main` (and on releases). The site is **deployed** to Pages when you **publish a GitHub Release** or **manually run** the Publish workflow (**Actions → Publish → Run workflow**) on `main`.
+
+## Buttons and sleep
+
+With the **USB port at the bottom**, the button at the **bottom right** triggers **deep sleep**; the button on the **right edge** wakes the device. In the YAML, `deep_sleep` wakeup pin configuration is **commented out** because it was reported to prevent sleep from working reliably—adjust GPIOs if your board differs (`GPIO35` is used for the sleep button).
+
+## Technical notes (forks / maintainers)
+
+- **`external_components`:** The config pulls ESPHome’s `adc` from [PR #7942](https://github.com/esphome/esphome/pull/7942) for toolchain compatibility. Remove that block once a release you ship includes the fix. See [CHANGELOG.md](CHANGELOG.md).
+- **Battery:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider (see YAML comments). Font redistribution: see `COPYRIGHT` in the `.bdf` files under `fonts/`.
+
+## Other files
+
+- **[CHANGELOG.md](CHANGELOG.md)** — Release history and maintainer notes.
+- **[project-template-esp32.yaml](project-template-esp32.yaml)** — Minimal ESP32 + Wi‑Fi template unrelated to the quad display; useful as a starting point for other devices.
+
+Contributions and issue reports are welcome.
