@@ -1,5 +1,7 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
+**Release 1.0.0** — first stable release (see [CHANGELOG.md](CHANGELOG.md)). Create Git tag **`v1.0.0`** on the merge commit when you publish the release on GitHub.
+
 Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
 ## Install prebuilt firmware (web)

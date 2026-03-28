@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-28
+
+First **stable** release. Supersedes prior **0.8 beta** GitHub pre-releases.
+
 ### Added
 
 - **`external_components`** pulling ESPHome `adc` from [PR #7942](https://github.com/esphome/esphome/pull/7942) (`github://pr#7942`) to address ADC deprecation / build issues on newer toolchains.
