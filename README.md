@@ -2,6 +2,12 @@
 
 Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
+## Install prebuilt firmware (web)
+
+**[Open the installer page](https://shomanjk.github.io/ESPhome-Tdisplay-Quad-Sensor/)** — connect the T-Display over USB, use **Chrome** or **Edge**, and click the install button on that page ([Web Serial](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API) requirement; see [ESP Web Tools](https://esphome.github.io/esp-web-tools/)).
+
+If you **forked** this repo, use your own Pages URL after enabling Actions-based Pages: `https://<your-username>.github.io/<your-repo-name>/` (see below).
+
 ## Requirements
 
 - **Hardware:** Original **LilyGO T-Display** (ESP32). This config has **not** been tested on T-Display *S3* or other variants.
@@ -25,7 +31,7 @@ Four labeled rows (**Main Fridge**, **Main Freezer**, **Kitchen**, **Office**) w
 
 ## Instructions
 
-1. Open the install page (upstream example: `https://shomanjk.github.io/ESPhome-Tdisplay-Quad-Sensor/`). If you **forked** this repo, use `https://<your-username>.github.io/<your-repo-name>/` after Pages is enabled (see below).
+1. Use the **[installer page](#install-prebuilt-firmware-web)** above (same URL as in that section).
 2. **Local builds:** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard with this YAML). Replace the sensor `entity_id` values with your Home Assistant entities.
 
 ### If you fork: enable GitHub Pages
