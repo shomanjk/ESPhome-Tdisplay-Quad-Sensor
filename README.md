@@ -1,6 +1,6 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
-**Release 1.0.1** — patch after 1.0.0 (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.0.1`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
+**Release 1.1.0** — USB bolt font (Noto Sans Symbols 2) and publish workflow updates (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.1.0`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
 
 Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
@@ -19,7 +19,7 @@ That page is built from [`static/index.md`](static/index.md) by the [Publish wor
 
 **GitHub Pages** is almost certainly set to **Deploy from a branch** (for example **Build and deployment → Source: Deploy from a branch → `/ (root)`**). That makes Jekyll build the **repository root**, so the homepage becomes **README.md** and you will not get the [ESP Web Tools](https://esphome.github.io/esp-web-tools/) button or prebuilt binaries under `firmware/`.
 
-**Fix:** **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**. After the next successful [Publish](.github/workflows/publish.yml) run (every push to `main`, a release, or **Actions → Publish → Run workflow**), `https://<user>.github.io/<repo>/` should show the short **Installation** page with the install button.
+**Fix:** **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**. After the next successful [Publish](.github/workflows/publish.yml) run (every push to `main`, or **Actions → Publish → Run workflow**), `https://<user>.github.io/<repo>/` should show the short **Installation** page with the install button.
 
 If you **forked** this repo, use your own Pages URL once Actions publishing works: `https://<your-username>.github.io/<your-repo-name>/`.
 
@@ -53,7 +53,7 @@ Four labeled rows (**Main Fridge**, **Main Freezer**, **Kitchen**, **Office**) w
 
 This repo deploys Pages with **GitHub Actions** (see [`.github/workflows/publish.yml`](.github/workflows/publish.yml)), not a `gh-pages` branch. In the fork: **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**.
 
-The workflow **builds** firmware on every push to `main` (and on releases). The site is **deployed** to Pages on **every push to `main`**, when you **publish a GitHub Release**, or when you **manually run** the Publish workflow (**Actions → Publish → Run workflow**) on `main`.
+The workflow **builds** firmware and **deploys** to Pages on **every push to `main`**, or when you **manually run** the Publish workflow (**Actions → Publish → Run workflow**) on `main`. Creating a GitHub **Release** does not run Publish; merge or push to `main` (or a manual run) updates the live site.
 
 ## Buttons and sleep
 
@@ -62,7 +62,7 @@ With the **USB port at the bottom**, the button at the **bottom right** triggers
 ## Technical notes (forks / maintainers)
 
 - **`external_components`:** The config pulls ESPHome’s `adc` from [PR #7942](https://github.com/esphome/esphome/pull/7942) for toolchain compatibility. Remove that block once a release you ship includes the fix. See [CHANGELOG.md](CHANGELOG.md).
-- **Battery:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider (see YAML comments). Font redistribution: see `COPYRIGHT` in the `.bdf` files under `fonts/`.
+- **Battery:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider (see YAML comments). Fonts: `COPYRIGHT` in the `.bdf` files under `fonts/`; the USB bolt uses **Noto Sans Symbols 2** (`fonts/NotoSansSymbols2-Regular.ttf`, OFL in `fonts/OFL-NotoSansSymbols2.txt`).
 
 ## Other files
 

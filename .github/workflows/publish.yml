@@ -9,8 +9,6 @@ on:
       version:
         description: 'The version of the firmware to build'
         required: true
-  release:
-    types: [published]
 
 jobs:
   # Inline build (not esphome/workflows reusable) so we can `cp secrets.yaml.example secrets.yaml`
@@ -28,7 +26,7 @@ jobs:
       - name: Firmware version
         id: version
         run: |
-          VERSION="${{ github.event_name == 'release' && github.event.release.tag_name || (github.event_name == 'workflow_dispatch' && inputs.version || '') }}"
+          VERSION="${{ github.event_name == 'workflow_dispatch' && inputs.version || '' }}"
           if [ -z "$VERSION" ]; then VERSION="dev-$(date +'%Y%m%d-%H%M')"; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Build Firmware
@@ -39,8 +37,6 @@ jobs:
           # Prebuilt firmware tracks current stable; config last verified on ESPHome 2026.3.1 (see README).
           version: stable
           complete-manifest: true
-          release-summary: ${{ github.event_name == 'release' && github.event.release.body || '' }}
-          release-url: ${{ github.event_name == 'release' && github.event.release.html_url || '' }}
       - name: Stage versioned output
         run: |
           mkdir -p "output/${{ steps.version.outputs.version }}"
@@ -70,8 +66,8 @@ jobs:
 
   publish:
     name: Publish to GitHub Pages
-    # Deploy on every push to main so github.io serves static/index.md + firmware/, not a branch-built README.
-    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    # Deploy on push to main (and manual dispatch on main). GitHub Releases do not trigger this workflow.
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     needs:
       - build-firmware

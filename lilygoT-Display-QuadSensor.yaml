@@ -55,6 +55,12 @@ font:
   - file: "fonts/arial_24.bdf"
     id: medium_font
 
+  # U+26A1 (⚡): not in arial_*.bdf; Arial.ttf also omits this glyph. Noto Sans Symbols 2 (OFL).
+  - file: "fonts/NotoSansSymbols2-Regular.ttf"
+    id: bolt_font
+    size: 16
+    glyphs: "⚡"
+
 # Set global value for when the battery level was low
 globals:
   - id: last_low_battery_time
@@ -249,5 +255,5 @@ display:
 
         if (usb)
           it.printf(bx + bw / 2 - 4, by - 10,
-                    id(tiny_font), id(color_yellow), "⚡");
+                    id(bolt_font), id(color_yellow), "⚡");
       }

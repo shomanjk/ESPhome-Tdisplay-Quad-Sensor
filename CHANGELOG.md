@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-07
+
+### Changed
+
+- **Display (USB bolt):** use **Noto Sans Symbols 2** (`bolt_font`, glyph ⚡) instead of Arial BDF, matching the private `refrigerator-quad-temp-display` config; Arial bitmap fonts do not include U+26A1.
+- **Publish workflow:** removed **`release: types: [published]`** trigger; deploy runs only on **push to `main`** and **`workflow_dispatch`**. GitHub Releases are for notes/tags only unless you trigger a manual Publish with a chosen version label.
+
 ## [1.0.1] - 2026-03-29
 
 ### Changed
