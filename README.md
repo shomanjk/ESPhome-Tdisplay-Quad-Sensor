@@ -1,6 +1,6 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
-**Release 1.1.0** — USB bolt font (Noto Sans Symbols 2) and publish workflow updates (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.1.0`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
+**Release 1.2.0** — ESPHome 2026.7 display/ADC migration and recoverable deep sleep (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.2.0`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
 
 Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
@@ -26,8 +26,8 @@ If you **forked** this repo, use your own Pages URL once Actions publishing work
 ## Requirements
 
 - **Hardware:** Original **LilyGO T-Display** (ESP32). This config has **not** been tested on T-Display *S3* or other variants.
-- **ESPHome:** **Pages** and **CI** both compile with **current stable**. Treat **2026.3.1** as the **last explicitly verified** release in this repo; use **stable** locally and expect older ESPHome versions may fail (BDF fonts and `adc` behavior differ).
-- **Home Assistant:** The device uses the **native API** (`api:`). Edit [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) and set the four `entity_id` values (and `unit_of_measurement` if you do not use °F) to match your entities.
+- **ESPHome:** **Pages** and **CI** both compile with **current stable**. Treat **2026.7.2** as the **last explicitly verified** release in this repo; use **stable** locally. Older ESPHome (before the `mipi_spi` T-Display model and stock ADC) will not match this YAML.
+- **Home Assistant:** The device uses the **native API** (`api:`). Edit the four **`substitutions`** at the top of [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) (and `unit_of_measurement` if you do not use °F) to match your entities.
 
 ## What appears on the display
 
@@ -47,7 +47,7 @@ Four labeled rows (**Main Fridge**, **Main Freezer**, **Kitchen**, **Office**) w
 ## Instructions
 
 1. Use the **[installer page](#install-prebuilt-firmware-web)** above (same URL as in that section).
-2. **Local builds:** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard with this YAML). Replace the sensor `entity_id` values with your Home Assistant entities.
+2. **Local builds:** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard with this YAML). Set the four `substitutions` entity IDs to your Home Assistant entities.
 
 ### If you fork: enable GitHub Pages
 
@@ -57,12 +57,14 @@ The workflow **builds** firmware and **deploys** to Pages on **every push to `ma
 
 ## Buttons and sleep
 
-With the **USB port at the bottom**, the button at the **bottom right** triggers **deep sleep**; the button on the **right edge** wakes the device. In the YAML, `deep_sleep` wakeup pin configuration is **commented out** because it was reported to prevent sleep from working reliably—adjust GPIOs if your board differs (`GPIO35` is used for the sleep button).
+With the **USB port at the bottom**, release the button at the **bottom right** (**GPIO35**) to enter **deep sleep** for **1 hour** (or until you press the same button again to wake). Low battery (< 30%, and not on USB) waits **3 minutes**, then sleeps for **1 hour** the same way—never with zero wake sources.
+
+Sleep is entered on **button release** (not press) so the wake pin is inactive when EXT0 is armed. After a button wake, the first release is ignored so the device does not immediately re-sleep.
 
 ## Technical notes (forks / maintainers)
 
-- **`external_components`:** The config pulls ESPHome’s `adc` from [PR #7942](https://github.com/esphome/esphome/pull/7942) for toolchain compatibility. Remove that block once a release you ship includes the fix. See [CHANGELOG.md](CHANGELOG.md).
-- **Battery:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider (see YAML comments). Fonts: `COPYRIGHT` in the `.bdf` files under `fonts/`; the USB bolt uses **Noto Sans Symbols 2** (`fonts/NotoSansSymbols2-Regular.ttf`, OFL in `fonts/OFL-NotoSansSymbols2.txt`).
+- **Display:** `mipi_spi` / `model: T-DISPLAY`; backlight on **GPIO4** (`output` + `on_boot`). Do not use deprecated `st7789v` on current ESPHome.
+- **Battery / USB:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider; USB present when VBatt **> 4.25 V**. Fonts: `COPYRIGHT` in the `.bdf` files under `fonts/`; the USB bolt uses **Noto Sans Symbols 2** (`fonts/NotoSansSymbols2-Regular.ttf`, OFL in `fonts/OFL-NotoSansSymbols2.txt`).
 
 ## Other files
 

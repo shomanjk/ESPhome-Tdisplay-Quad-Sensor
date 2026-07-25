@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-25
+
+### Changed
+
+- **Display:** migrate `st7789v` → **`mipi_spi`** / **`model: T-DISPLAY`**; drive backlight on **GPIO4** via `output` + `on_boot` (required on ESPHome 2026.7+).
+- **ADC:** remove stale **`github://pr#7942`** `external_components` pin (fix is in current stable).
+- **USB detect:** publish from VBatt ADC `on_value` / early boot at **> 4.25 V** (was a polling template at 4.3 V that lagged `update_interval`).
+- **Deep sleep:** recoverable wake — **`sleep_duration: 1h`** plus **GPIO35** `wakeup_pin` (`IGNORE`, `allow_other_uses`); button sleeps on **`on_release`** with debounce; ignore first release after EXT wake so the device does not immediately re-sleep.
+- **Low battery:** after the 3‑minute delay, re-check USB and only then enter 1h sleep (`script` `mode: restart`).
+- **Boot:** early VBatt / USB / battery % refresh so the gauge appears within a few seconds.
+- **Forkability:** four Home Assistant `entity_id` values moved to **`substitutions`** at the top of the YAML.
+- **Verified ESPHome:** **2026.7.2** (CI/Publish still track **`stable`**).
+
+### Removed
+
+- Brickable deep sleep with **no wake sources** (previous public config could sleep until a hardware RST).
+
 ## [1.1.0] - 2026-04-07
 
 ### Changed

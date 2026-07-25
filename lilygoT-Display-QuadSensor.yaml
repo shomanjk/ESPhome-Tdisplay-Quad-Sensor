@@ -1,27 +1,46 @@
-# ESPHome: use current stable; last verified on 2026.3.1 (see README).
+# ESPHome: use current stable; last verified on 2026.7.2 (see README).
+substitutions:
+  # Forkers: change these to your Home Assistant entity IDs
+  entity_main_fridge: sensor.main_fridge_a290_temperature
+  entity_main_freezer: sensor.main_freezer_temperature
+  entity_kitchen: sensor.kitchen_temperature
+  entity_office: sensor.office_temperature
+
 esphome:
   name: refrigerator-quad-temp-display
   friendly_name: Refrigerator Quad Temp Display
+  on_boot:
+    - priority: 600
+      then:
+        # Button wake leaves GPIO35 held; ignore the following release so we don't re-sleep
+        - lambda: |-
+            auto cause = esp_sleep_get_wakeup_cause();
+            id(ignore_button_release) =
+                (cause == ESP_SLEEP_WAKEUP_EXT0 || cause == ESP_SLEEP_WAKEUP_EXT1);
+    - priority: -100
+      then:
+        - output.turn_on: backlight_gpio
+        # First ADC sample is otherwise delayed by update_interval (~60–120s)
+        - delay: 2s
+        - component.update: vcc
+        - delay: 500ms
+        - binary_sensor.template.publish:
+            id: usb_power_present
+            state: !lambda 'return id(vcc).has_state() && id(vcc).state > 4.25;'
+        - component.update: batterylevel
 
 esp32:
   board: esp32dev
   framework:
     type: arduino
 
-# Pin ADC component to ESPHome PR (deprecation / build fix); remove when merged.
-external_components:
-  - source: github://pr#7942
-    refresh: 30s
-    components:
-      - adc
-
 logger:
   level: WARN
 
-# Enable Home Assistant API
+# Enable Home Assistant API (open for prebuilt Web Tools flashing; add encryption locally if desired)
 api:
 
-# OTA is required for Over-the-Air updating
+# OTA is required for Over-the-Air updating (open for prebuilt; add password locally if desired)
 ota:
   - platform: esphome
 
@@ -40,10 +59,15 @@ captive_portal:
 #   port: 80
 #   include_internal: true
 
-# Support for the Display pins
 spi:
   clk_pin: GPIO18
   mosi_pin: GPIO19
+
+# Backlight (was backlight_pin on st7789v; mipi_spi does not drive it)
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: backlight_gpio
 
 font:
   - file: "fonts/arial_11.bdf"
@@ -61,32 +85,36 @@ font:
     size: 16
     glyphs: "⚡"
 
-# Set global value for when the battery level was low
+# Debounce so low-battery sleep is only armed once per wake cycle
 globals:
   - id: last_low_battery_time
     type: unsigned long
     restore_value: no
     initial_value: '0'
+  - id: ignore_button_release
+    type: bool
+    restore_value: no
+    initial_value: 'false'
 
 sensor:
   - platform: homeassistant
     name: "Main Fridge Temperature"
-    entity_id: sensor.main_fridge_a290_temperature
+    entity_id: ${entity_main_fridge}
     id: main_fridge_temp
     unit_of_measurement: 'F'
 
   - platform: homeassistant
     name: "Main Freezer Temperature"
-    entity_id: sensor.main_freezer_temperature
+    entity_id: ${entity_main_freezer}
     id: main_freezer_temp
 
   - platform: homeassistant
     name: "Kitchen Temperature"
-    entity_id: sensor.kitchen_temperature
+    entity_id: ${entity_kitchen}
     id: kitchen_temp
 
   - platform: homeassistant
-    entity_id: sensor.office_temperature
+    entity_id: ${entity_office}
     id: office_temp
     unit_of_measurement: 'F'
 
@@ -98,15 +126,15 @@ sensor:
     update_interval: 60s
     filters:
       - multiply: 2  # Adjust for the voltage divider 2.02695
+    on_value:
+      then:
+        - binary_sensor.template.publish:
+            id: usb_power_present
+            state: !lambda 'return x > 4.25;'
+        - component.update: batterylevel
 
   - platform: internal_temperature
     name: "Internal Temperature"
-#    id: internal_temp
-#    update_interval: 60s  #update the sensor every 60 seconds
-#    on_value:
-#      then:
-#        - lambda:
-#            ESP_LOGI("internal_temp", std::string::format("Temperature: %.2f°C", x).c_str());
 
   - platform: template
     name: "Lilygo T-Display Battery Level"
@@ -121,7 +149,7 @@ sensor:
 
       float voltage = id(vcc).state;
 
-      // Clamp USB-powered readings
+      // Clamp USB-powered readings for % only (USB detect uses raw VBatt)
       if (voltage > 4.2) voltage = 4.2;
       if (voltage < 3.0) voltage = 3.0;
 
@@ -139,7 +167,7 @@ sensor:
       else if (voltage >= 3.40) percentage = 10;
       else percentage = 5;
 
-      // Do NOT sleep if USB is present
+      // Do NOT arm sleep if USB is present (threshold tuned for T-Display charge bump)
       if (!id(usb_power_present).state &&
           percentage < 30 &&
           id(last_low_battery_time) == 0) {
@@ -149,47 +177,66 @@ sensor:
 
       return percentage;
 
-# Define deep sleep configuration
+# Recoverable deep sleep: timer (1h) and button (GPIO35) can wake; never sleep forever.
 deep_sleep:
   id: deep_sleep_config
-#  sleep_duration:
-#    seconds: 20
-#  wakeup_pin: GPIO0  # Change this to the correct GPIO number for your board's button
-#  wakeup_pin_mode: KEEP_AWAKE
+  sleep_duration: 1h
+  wakeup_pin:
+    number: GPIO35
+    inverted: true
+    mode: INPUT
+    allow_other_uses: true
+  # Wake on button LOW. Enter sleep only after release so the pin is HIGH and
+  # does not immediately trip EXT0 (on_press + IGNORE caused blink-awake).
+  wakeup_pin_mode: IGNORE
 
-# the wakeup pin seems to break this.  it won't go to sleep when it's configured.
-
-# Script to delay and then enter deep sleep
 script:
   - id: low_battery_script
+    mode: restart
     then:
-      - delay: 3min  # Wait for 3 minutes
-      - deep_sleep.enter: deep_sleep_config
+      - delay: 3min
+      # Re-check USB after the wait — plug-in during the delay cancels sleep
+      - if:
+          condition:
+            lambda: 'return !id(usb_power_present).state;'
+          then:
+            - deep_sleep.enter:
+                id: deep_sleep_config
+                sleep_duration: 1h
 
-# Define the GPIO pin for the onboard button
 binary_sensor:
   - platform: gpio
     pin:
-      number: GPIO35  # Change this to the correct GPIO number for your board's button
+      number: GPIO35
       mode: INPUT
       inverted: true
+      allow_other_uses: true
     name: "Sleep Button 1"
-#    id: onboard_button_1
-    on_press:
+    id: sleep_button
+    internal: true
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+    # Sleep after release so GPIO35 is inactive before EXT0 is armed.
+    # Skip the first release after a button wake (that release is still the wake press).
+    on_release:
       then:
-        - deep_sleep.enter:
-            id: deep_sleep_config
-    internal: True
+        - if:
+            condition:
+              lambda: 'return id(ignore_button_release);'
+            then:
+              - lambda: 'id(ignore_button_release) = false;'
+            else:
+              - delay: 200ms
+              - deep_sleep.enter:
+                  id: deep_sleep_config
+                  sleep_duration: 1h
 
+  # Published from ADC on_value / on_boot (not a PollingComponent)
   - platform: template
     name: "USB Power Present"
     id: usb_power_present
     internal: true
-    lambda: |-
-      if (!id(vcc).has_state()) return false;
-
-      // TTGO T-Display: VBAT jumps above 4.3V when USB is present
-      return id(vcc).state > 4.3;
 
 color:
   - id: color_green
@@ -203,12 +250,11 @@ color:
     green: 100%
 
 display:
-  - platform: st7789v
-    model: TTGO TDisplay 135x240
+  - platform: mipi_spi
+    model: T-DISPLAY
     cs_pin: GPIO5
     dc_pin: GPIO16
     reset_pin: GPIO23
-    backlight_pin: GPIO4
     rotation: 0
 
     lambda: |-
