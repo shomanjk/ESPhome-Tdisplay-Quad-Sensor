@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-07-28
+
+### Added
+
+- Commented optional `esp32.framework.advanced` (`minimum_chip_revision`, `sram1_as_iram`) plus README guidance — defaults stay compatible with older T-Display silicon/bootloaders; enable only when boot logs confirm it is safe (prefer a local/adopted overlay).
+- **Verified ESPHome:** **2026.7.3** (CI/Publish still track **`stable`**).
+
 ## [1.4.0] - 2026-07-28
 
 ### Added

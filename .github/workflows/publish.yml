@@ -40,7 +40,7 @@ jobs:
         id: esphome-build
         with:
           yaml-file: lilygoT-Display-QuadSensor.factory.yaml
-          # Prebuilt firmware tracks current stable; config last verified on ESPHome 2026.7.2 (see README).
+          # Prebuilt firmware tracks current stable; config last verified on ESPHome 2026.7.3 (see README).
           version: stable
           complete-manifest: true
       - name: Stage versioned output
