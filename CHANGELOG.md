@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-07-28
+
+### Fixed
+
+- **Silent-resume vs OTA race:** honor `resume_silent_checkin` only on soft reboot (`ESP_RST_SW`); do not clear the flag before timer sleep (avoids late-OTA interactive boot). Stale NVS after power-on is ignored and cleared ([#11](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/pull/11) / [#12](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/pull/12) Codex review).
+- **Factory `project.version`:** bump to **1.4.3** in [`lilygoT-Display-QuadSensor.factory.yaml`](lilygoT-Display-QuadSensor.factory.yaml) so local/CI factory builds match the release (Publish already rewrote this at deploy time).
+
 ## [1.4.2] - 2026-07-28
 
 ### Fixed
