@@ -18,12 +18,24 @@ esphome:
   on_boot:
     - priority: 600
       then:
-        # Classify wake: button (ignore release), timer (silent check-in), else interactive
+        # Classify wake: button (ignore release), timer / post-OTA silent resume, else interactive
         - lambda: |-
             auto cause = esp_sleep_get_wakeup_cause();
-            id(ignore_button_release) =
+            bool button =
                 (cause == ESP_SLEEP_WAKEUP_EXT0 || cause == ESP_SLEEP_WAKEUP_EXT1);
-            id(timer_wake) = (cause == ESP_SLEEP_WAKEUP_TIMER);
+            id(ignore_button_release) = button;
+            // Button wake is always interactive; cancel any pending post-OTA silent resume.
+            if (button) {
+              id(resume_silent_checkin) = false;
+              id(timer_wake) = false;
+            } else if (cause == ESP_SLEEP_WAKEUP_TIMER || id(resume_silent_checkin)) {
+              // Timer wake, or soft reboot mid-check-in (queued OTA) — stay silent.
+              id(timer_wake) = true;
+            } else {
+              // Cold boot / other — interactive
+              id(resume_silent_checkin) = false;
+              id(timer_wake) = false;
+            }
     - priority: -100
       then:
         - if:
@@ -49,7 +61,7 @@ esp32:
     type: arduino
     # Optional — leave commented for max board compatibility (older ESP32 silicon /
     # bootloaders). Wrong values can prevent boot. Enable only when YOUR boot logs say:
-    #   "Chip rev >= 3.0 detected…"  → uncomment minimum_chip_revision
+    #   "Chip rev >= 3.1 detected…"  → uncomment minimum_chip_revision (value matches 3.1+)
     #   "Bootloader supports SRAM1 as IRAM…" → uncomment sram1_as_iram (USB flash once first)
     # Prefer adding these in your adopted/local overlay rather than editing the package.
     # advanced:
@@ -120,6 +132,12 @@ globals:
   - id: timer_wake
     type: bool
     restore_value: no
+    initial_value: 'false'
+  # Survives soft reboot (queued OTA during silent check-in). Cleared on button/cold
+  # interactive boot and before intentional timer re-sleep.
+  - id: resume_silent_checkin
+    type: bool
+    restore_value: yes
     initial_value: 'false'
 
 sensor:
@@ -226,6 +244,8 @@ script:
   - id: timer_checkin_script
     mode: single
     then:
+      # Persist across OTA reboot so post-update boot stays silent (not interactive).
+      - lambda: 'id(resume_silent_checkin) = true;'
       - wait_until:
           condition:
             wifi.connected:
@@ -242,6 +262,7 @@ script:
       - component.update: batterylevel
       # Window for Device Builder queued offline OTA to start/finish
       - delay: 2min
+      - lambda: 'id(resume_silent_checkin) = false;'
       - deep_sleep.enter:
           id: deep_sleep_config
           sleep_duration: ${deep_sleep_duration}
@@ -258,6 +279,9 @@ script:
             - deep_sleep.enter:
                 id: deep_sleep_config
                 sleep_duration: ${deep_sleep_duration}
+          else:
+            # USB cancel: clear debounce so a later low-battery reading can re-arm
+            - lambda: 'id(last_low_battery_time) = 0;'
 
 binary_sensor:
   - platform: gpio
@@ -319,22 +343,22 @@ display:
       int spacing = 57;   // Vertical spacing between entities
       int line_spacing = 1; // Additional space between the temperature value and the horizontal line
 
-      it.printf(2, y_offset, id(small_font), id(color_green), "${label_1}:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "%s:", "${label_1}");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_1).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(2, y_offset, id(small_font), id(color_green), "${label_2}:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "%s:", "${label_2}");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_2).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(2, y_offset, id(small_font), id(color_green), "${label_3}:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "%s:", "${label_3}");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_3).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(2, y_offset, id(small_font), id(color_green), "${label_4}:");
+      it.printf(2, y_offset, id(small_font), id(color_green), "%s:", "${label_4}");
       it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_4).state);
 
       if (id(batterylevel).has_state()) {

@@ -4,9 +4,18 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-07-28
+
+### Fixed
+
+- **Silent check-in after queued OTA:** persist `resume_silent_checkin` across soft reboot so a successful OTA during the timer window does not fall into the interactive (backlight-on) boot path and stay awake until a button press ([#7](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/pull/7) Codex review).
+- **Low-battery sleep re-arm:** clear `last_low_battery_time` when USB power cancels the 3-minute low-battery sleep so a later low reading can arm sleep again ([#6](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/pull/6) Codex review).
+- **Row labels with `%`:** render `label_*` via `printf("%s:", …)` so custom labels are not treated as format strings ([#7](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/pull/7) Codex review).
+- **ESP32 advanced opts comment:** document chip revision **≥ 3.1** to match the commented `minimum_chip_revision: "3.1"` example ([#9](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/pull/9) Codex review).
+
 ### Changed
 
-- Updated device photo (`QuadSensor-Tdisplay.jpg`) on the README and GitHub Pages installer.
+- Updated device photo (`QuadSensor-Tdisplay.jpg`) on the README and GitHub Pages installer (landed after 1.4.1).
 
 ## [1.4.1] - 2026-07-28
 
