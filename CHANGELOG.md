@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Commented optional `esp32.framework.advanced` (`minimum_chip_revision`, `sram1_as_iram`) plus README guidance — defaults stay compatible with older T-Display silicon/bootloaders; enable only when boot logs confirm it is safe.
+
 ## [1.4.0] - 2026-07-28
 
 ### Added

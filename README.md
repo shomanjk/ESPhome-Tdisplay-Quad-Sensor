@@ -92,6 +92,7 @@ Sleep is entered on **button release** (not press) so the wake pin is inactive w
 - **Display:** `mipi_spi` / `model: T-DISPLAY`; backlight on **GPIO4** (`output` + `on_boot`). Do not use deprecated `st7789v` on current ESPHome.
 - **Deep sleep:** `sleep_duration` comes from substitution **`deep_sleep_duration`**; GPIO35 `wakeup_pin` with `wakeup_pin_mode: IGNORE`.
 - **Battery / USB:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider; USB present when VBatt **> 4.25 V**. Fonts: `COPYRIGHT` in the `.bdf` files under `fonts/`; the USB bolt uses **Noto Sans Symbols 2** (`fonts/NotoSansSymbols2-Regular.ttf`, OFL in `fonts/OFL-NotoSansSymbols2.txt`).
+- **ESP32 chip / IRAM opts (optional):** Original T-Displays shipped over years with different ESP32 silicon. Defaults leave `esp32.framework.advanced` **unset** so older boards keep working. After a **USB** flash with current ESPHome, boot logs may suggest `minimum_chip_revision: "3.1"` and/or `sram1_as_iram: true` — uncomment those lines in the core YAML or, better, set them in your **local/adopted overlay**. Do not enable them blindly: wrong revision or an old bootloader can prevent boot (USB recover). See commented block under `esp32:` in [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml).
 
 ## Other files
 
