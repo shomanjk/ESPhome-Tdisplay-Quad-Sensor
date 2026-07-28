@@ -18,9 +18,10 @@ esphome:
   on_boot:
     - priority: 600
       then:
-        # Classify wake: button (ignore release), timer / post-OTA silent resume, else interactive
+        # Classify wake: button, timer, soft-reboot mid-check-in (OTA), else interactive
         - lambda: |-
             auto cause = esp_sleep_get_wakeup_cause();
+            auto reset = esp_reset_reason();
             bool button =
                 (cause == ESP_SLEEP_WAKEUP_EXT0 || cause == ESP_SLEEP_WAKEUP_EXT1);
             id(ignore_button_release) = button;
@@ -28,11 +29,14 @@ esphome:
             if (button) {
               id(resume_silent_checkin) = false;
               id(timer_wake) = false;
-            } else if (cause == ESP_SLEEP_WAKEUP_TIMER || id(resume_silent_checkin)) {
-              // Timer wake, or soft reboot mid-check-in (queued OTA) — stay silent.
+            } else if (cause == ESP_SLEEP_WAKEUP_TIMER) {
+              id(timer_wake) = true;
+            } else if (id(resume_silent_checkin) && reset == ESP_RST_SW) {
+              // Soft reboot mid-check-in (queued OTA) — stay silent. Require SW reset so a
+              // stale NVS true after power-on does not force another silent cycle.
               id(timer_wake) = true;
             } else {
-              // Cold boot / other — interactive
+              // Cold boot / other — interactive; drop stale flag
               id(resume_silent_checkin) = false;
               id(timer_wake) = false;
             }
@@ -133,8 +137,8 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
-  # Survives soft reboot (queued OTA during silent check-in). Cleared on button/cold
-  # interactive boot and before intentional timer re-sleep.
+  # Survives soft reboot (queued OTA during silent check-in). Honored only with
+  # ESP_RST_SW at boot; cleared on button / cold / other interactive boots.
   - id: resume_silent_checkin
     type: bool
     restore_value: yes
@@ -260,14 +264,11 @@ script:
           id: usb_power_present
           state: !lambda 'return id(vcc).has_state() && id(vcc).state > 4.25;'
       - component.update: batterylevel
-      # Window for Device Builder queued offline OTA to start/finish
+      # Window for Device Builder queued offline OTA to start/finish.
+      # Do NOT clear resume_silent_checkin here — a late OTA reboot during clear/sync
+      # would lose silent mode. Boot only honors the flag on ESP_RST_SW; power-on
+      # and button wakes clear it. Timer wakes use ESP_SLEEP_WAKEUP_TIMER.
       - delay: 2min
-      # Clear, yield so GlobalsComponent can stage the change (update_interval
-      # default 1s), then flush NVS before deep_sleep.enter.
-      - lambda: 'id(resume_silent_checkin) = false;'
-      - delay: 2s
-      - lambda: 'global_preferences->sync();'
-      - delay: 250ms
       - deep_sleep.enter:
           id: deep_sleep_config
           sleep_duration: ${deep_sleep_duration}
