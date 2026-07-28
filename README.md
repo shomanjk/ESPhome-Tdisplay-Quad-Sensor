@@ -53,7 +53,7 @@ If you **forked** this repo, use your own Pages URL once Actions publishing work
 
 Four labeled rows (demo defaults: **Main Fridge**, **Main Freezer**, **Kitchen**, **Office** — set via `label_1`…`label_4`) with live values, a **battery** outline with fill and percentage, and a yellow **⚡** when USB power is detected (TTGO T-Display behavior).
 
-<img src="QuadSensor-Tdisplay.jpg" alt="Quad Sensor Display screenshot" width="300"/>
+<img src="QuadSensor-Tdisplay.jpg" alt="LilyGO T-Display showing four Home Assistant temperatures and battery" width="300"/>
 
 ## One-click builds and secrets
 

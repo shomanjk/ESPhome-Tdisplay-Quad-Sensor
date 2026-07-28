@@ -2,7 +2,7 @@
 
 **T-Display Quad Sensor** shows four Home Assistant values on the **LilyGO T-Display** (ESP32), plus a battery gauge and USB indicator. Example use case: refrigerator, freezer, and room temperatures. It has **not** been tested on T-Display *S3* variants.
 
-<img src="https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/blob/main/QuadSensor-Tdisplay.jpg?raw=true" alt="Quad Sensor Display screenshot" width="300"/>
+<img src="https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/blob/main/QuadSensor-Tdisplay.jpg?raw=true" alt="LilyGO T-Display showing four Home Assistant temperatures and battery" width="300"/>
 
 # Installation
 
