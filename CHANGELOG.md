@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Updated device photo (`QuadSensor-Tdisplay.jpg`) on the README and GitHub Pages installer.
+
 ## [1.4.1] - 2026-07-28
 
 ### Added
