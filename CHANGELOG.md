@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-28
+
+### Added
+
+- **Factory web image** [`lilygoT-Display-QuadSensor.factory.yaml`](lilygoT-Display-QuadSensor.factory.yaml): `project`, `dashboard_import` (Adopt core YAML from this repo), `improv_serial`, and `name_add_mac_suffix`.
+- **Publish / CI** build the factory YAML; Publish injects `project.version` from the workflow version string.
+
+### Changed
+
+- **Device identity:** `tdisplay-quad-sensor` / **T-Display Quad Sensor** (was refrigerator-named).
+- **Docs:** flash → Improv Wi‑Fi → Adopt → edit `label_*` / `entity_*`; refrigerator/freezer/room temps called out as an example use case; prebuilt still ships demo entity IDs until customized.
+- **Installer copy** (`static/index.md`) matches the adopt flow.
+
+### Removed
+
+- Stale [`project-template-esp32.factory.yaml`](project-template-esp32.factory.yaml) that pointed `dashboard_import` at the upstream ESPHome project-template adopt URL.
+
 ## [1.3.0] - 2026-07-28
 
 ### Added

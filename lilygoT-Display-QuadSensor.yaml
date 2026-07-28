@@ -13,8 +13,8 @@ substitutions:
   deep_sleep_duration: "24h"
 
 esphome:
-  name: refrigerator-quad-temp-display
-  friendly_name: Refrigerator Quad Temp Display
+  name: tdisplay-quad-sensor
+  friendly_name: T-Display Quad Sensor
   on_boot:
     - priority: 600
       then:

@@ -1,19 +1,39 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
-**Release 1.3.0** — 24h silent timer check-in (battery + queued OTA window) with button-only interactive stay-awake (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.3.0`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
+**Release 1.4.0** — factory web install with **Improv Serial** Wi‑Fi and **Adopt** into ESPHome Device Builder (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.4.0`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
 
-Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
+Four Home Assistant sensor values on the original **LilyGO T-Display** (ESP32), plus a battery gauge and USB-power indicator. Typical use cases include **refrigerator / freezer / room temperatures** (the demo substitutions), or any four numeric HA entities you prefer.
+
+Prebuilt **factory** firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
 ## Install prebuilt firmware (web)
 
 1. Connect the T-Display over USB.
 2. Open the installer in **Chrome** or **Edge** ([Web Serial](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API); see [ESP Web Tools](https://esphome.github.io/esp-web-tools/)).
+3. Flash the firmware, then complete **Improv Serial** Wi‑Fi provisioning in the installer when prompted.
+4. In **Home Assistant → ESPHome Device Builder**, **Adopt** the device. That pulls [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) so you can edit rows and OTA.
 
 Installer URL (clickable on GitHub; copy-paste if needed):
 
 https://shomanjk.github.io/ESPhome-Tdisplay-Quad-Sensor/
 
 That page is built from [`static/index.md`](static/index.md) by the [Publish workflow](.github/workflows/publish.yml) and includes the flash button plus `firmware/manifest.json` — it is **not** this README file.
+
+The web image is built from [`lilygoT-Display-QuadSensor.factory.yaml`](lilygoT-Display-QuadSensor.factory.yaml) (`improv_serial`, `dashboard_import`, MAC-suffixed name). After Adopt, you edit the **core** package (not the factory wrapper).
+
+### After install: customize your four rows
+
+Prebuilt firmware still ships **example** fridge/kitchen entity IDs so the display can demo out of the box on a matching HA setup. For your home:
+
+1. Adopt the device in ESPHome Device Builder.
+2. Edit **`label_1`…`label_4`** and **`entity_1`…`entity_4`** (and `unit_of_measurement` / **`deep_sleep_duration`** if needed).
+3. Install via OTA.
+
+Until you change those substitutions, rows point at the demo entities in this repo’s YAML.
+
+### If Wi‑Fi must be set again
+
+Use the web installer’s **Improv Serial** again over USB, or join the device **`Fallback_AP`** captive portal when it cannot reach the configured network.
 
 ### If github.io shows this whole README but no install button
 
@@ -27,17 +47,17 @@ If you **forked** this repo, use your own Pages URL once Actions publishing work
 
 - **Hardware:** Original **LilyGO T-Display** (ESP32). This config has **not** been tested on T-Display *S3* or other variants.
 - **ESPHome:** **Pages** and **CI** both compile with **current stable**. Treat **2026.7.2** as the **last explicitly verified** release in this repo; use **stable** locally. Older ESPHome (before the `mipi_spi` T-Display model and stock ADC) will not match this YAML.
-- **Home Assistant:** The device uses the **native API** (`api:`). Edit **`label_1`…`label_4`** and **`entity_1`…`entity_4`** (and `unit_of_measurement` if you do not use °F) at the top of [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml). Optional: change **`deep_sleep_duration`** (default **`24h`**) for more or less frequent silent check-ins.
+- **Home Assistant:** Native API (`api:`). Device name defaults to **`tdisplay-quad-sensor`** (factory builds append a MAC suffix).
 
 ## What appears on the display
 
-Four labeled rows (defaults: **Main Fridge**, **Main Freezer**, **Kitchen**, **Office** — set via `label_1`…`label_4`) with live values, a **battery** outline with fill and percentage, and a yellow **⚡** when USB power is detected (TTGO T-Display behavior).
+Four labeled rows (demo defaults: **Main Fridge**, **Main Freezer**, **Kitchen**, **Office** — set via `label_1`…`label_4`) with live values, a **battery** outline with fill and percentage, and a yellow **⚡** when USB power is detected (TTGO T-Display behavior).
 
 <img src="QuadSensor-Tdisplay.jpg" alt="Quad Sensor Display screenshot" width="300"/>
 
 ## One-click builds and secrets
 
-[`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) uses `!secret wifi_ssid` and `!secret wifi_password` for Wi‑Fi—those are the **only** secrets referenced by the published YAML.
+[`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) uses `!secret wifi_ssid` and `!secret wifi_password` for Wi‑Fi—those are the **only** secrets referenced by the published YAML. Factory builds still need those keys present at **compile** time (CI uses dummies); end users set real Wi‑Fi via **Improv** or the captive portal.
 
 - **Visitors** can flash **prebuilt** firmware from GitHub Pages without a local `secrets.yaml`.
 - **CI and Pages** run `cp secrets.yaml.example secrets.yaml` before compile so automation uses **dummy** Wi‑Fi strings.
@@ -46,12 +66,13 @@ Four labeled rows (defaults: **Main Fridge**, **Main Freezer**, **Kitchen**, **O
 
 ## Instructions
 
-1. Use the **[installer page](#install-prebuilt-firmware-web)** above (same URL as in that section).
-2. **Local builds:** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard with this YAML). Set `label_*` / `entity_*` substitutions to your Home Assistant entities.
+1. Use the **[installer page](#install-prebuilt-firmware-web)** above (Improv Wi‑Fi, then Adopt).
+2. **Local builds (core / after adopt):** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard). Set `label_*` / `entity_*` substitutions to your Home Assistant entities.
+3. **Local factory build** (matches Pages): `esphome compile lilygoT-Display-QuadSensor.factory.yaml`.
 
 ### If you fork: enable GitHub Pages
 
-This repo deploys Pages with **GitHub Actions** (see [`.github/workflows/publish.yml`](.github/workflows/publish.yml)), not a `gh-pages` branch. In the fork: **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**.
+This repo deploys Pages with **GitHub Actions** (see [`.github/workflows/publish.yml`](.github/workflows/publish.yml)), not a `gh-pages` branch. In the fork: **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**. Update `dashboard_import.package_import_url` in the factory YAML to your fork.
 
 The workflow **builds** firmware and **deploys** to Pages on **every push to `main`**, or when you **manually run** the Publish workflow (**Actions → Publish → Run workflow**) on `main`. Creating a GitHub **Release** does not run Publish; merge or push to `main` (or a manual run) updates the live site.
 
@@ -67,6 +88,7 @@ Sleep is entered on **button release** (not press) so the wake pin is inactive w
 
 ## Technical notes (forks / maintainers)
 
+- **Factory vs core:** Pages flashes **`.factory.yaml`**; Adopt imports **core** YAML only.
 - **Display:** `mipi_spi` / `model: T-DISPLAY`; backlight on **GPIO4** (`output` + `on_boot`). Do not use deprecated `st7789v` on current ESPHome.
 - **Deep sleep:** `sleep_duration` comes from substitution **`deep_sleep_duration`**; GPIO35 `wakeup_pin` with `wakeup_pin_mode: IGNORE`.
 - **Battery / USB:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider; USB present when VBatt **> 4.25 V**. Fonts: `COPYRIGHT` in the `.bdf` files under `fonts/`; the USB bolt uses **Noto Sans Symbols 2** (`fonts/NotoSansSymbols2-Regular.ttf`, OFL in `fonts/OFL-NotoSansSymbols2.txt`).
@@ -74,6 +96,7 @@ Sleep is entered on **button release** (not press) so the wake pin is inactive w
 ## Other files
 
 - **[CHANGELOG.md](CHANGELOG.md)** — Release history and maintainer notes.
+- **[lilygoT-Display-QuadSensor.factory.yaml](lilygoT-Display-QuadSensor.factory.yaml)** — Factory image for web install / Improv / Adopt metadata.
 - **[project-template-esp32.yaml](project-template-esp32.yaml)** — Minimal ESP32 + Wi‑Fi template unrelated to the quad display; useful as a starting point for other devices.
 
 Contributions and issue reports are welcome.

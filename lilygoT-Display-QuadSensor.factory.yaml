@@ -1,0 +1,19 @@
+# Factory image for GitHub Pages / ESP Web Tools.
+# Core device config (adopt package): lilygoT-Display-QuadSensor.yaml
+packages:
+  core: !include lilygoT-Display-QuadSensor.yaml
+
+esphome:
+  # Unique name per board when many people flash the same binary
+  name_add_mac_suffix: true
+  project:
+    name: shomanjk.tdisplay-quad-sensor
+    # Publish workflow overwrites this for dated/dev and release builds
+    version: "1.4.0"
+
+# After Wi‑Fi + API, ESPHome Device Builder can Adopt this package URL
+dashboard_import:
+  package_import_url: github://shomanjk/ESPhome-Tdisplay-Quad-Sensor/lilygoT-Display-QuadSensor.yaml@main
+
+# Wi‑Fi via USB serial during web install (Chrome/Edge). No BLE Improv.
+improv_serial:

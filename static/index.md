@@ -1,12 +1,12 @@
 # About
 
-This project shows four Home Assistant temperature values on the **LilyGO T-Display** (ESP32), plus a battery gauge and USB indicator. It has **not** been tested on T-Display *S3* variants.
+**T-Display Quad Sensor** shows four Home Assistant values on the **LilyGO T-Display** (ESP32), plus a battery gauge and USB indicator. Example use case: refrigerator, freezer, and room temperatures. It has **not** been tested on T-Display *S3* variants.
 
 <img src="https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/blob/main/QuadSensor-Tdisplay.jpg?raw=true" alt="Quad Sensor Display screenshot" width="300"/>
 
 # Installation
 
-Use **Chrome** or **Edge** on a desktop (Web Serial is required). Connect the board by USB, then use the button below to flash prebuilt firmware from this site. More detail is in the [GitHub README](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor#readme).
+Use **Chrome** or **Edge** on a desktop (Web Serial is required). Connect the board by USB, then use the button below to flash **factory** firmware. The installer will offer **Improv Serial** so you can set Wi‑Fi. After the device is online, **Adopt** it in ESPHome Device Builder and edit the four row substitutions (`label_*` / `entity_*`) for your Home Assistant entities — see the [GitHub README](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor#readme).
 
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 
