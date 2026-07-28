@@ -1,10 +1,16 @@
 # ESPHome: use current stable; last verified on 2026.7.2 (see README).
 substitutions:
-  # Forkers: change these to your Home Assistant entity IDs
-  entity_main_fridge: sensor.main_fridge_a290_temperature
-  entity_main_freezer: sensor.main_freezer_temperature
-  entity_kitchen: sensor.kitchen_temperature
-  entity_office: sensor.office_temperature
+  # Forkers: change labels and Home Assistant entity IDs for each row
+  label_1: "Main Fridge"
+  entity_1: sensor.main_fridge_a290_temperature
+  label_2: "Main Freezer"
+  entity_2: sensor.main_freezer_temperature
+  label_3: "Kitchen"
+  entity_3: sensor.kitchen_temperature
+  label_4: "Office"
+  entity_4: sensor.office_temperature
+  # Timer / button / low-battery sleep length (e.g. "12h" for more frequent check-ins)
+  deep_sleep_duration: "24h"
 
 esphome:
   name: refrigerator-quad-temp-display
@@ -12,22 +18,30 @@ esphome:
   on_boot:
     - priority: 600
       then:
-        # Button wake leaves GPIO35 held; ignore the following release so we don't re-sleep
+        # Classify wake: button (ignore release), timer (silent check-in), else interactive
         - lambda: |-
             auto cause = esp_sleep_get_wakeup_cause();
             id(ignore_button_release) =
                 (cause == ESP_SLEEP_WAKEUP_EXT0 || cause == ESP_SLEEP_WAKEUP_EXT1);
+            id(timer_wake) = (cause == ESP_SLEEP_WAKEUP_TIMER);
     - priority: -100
       then:
-        - output.turn_on: backlight_gpio
-        # First ADC sample is otherwise delayed by update_interval (~60–120s)
-        - delay: 2s
-        - component.update: vcc
-        - delay: 500ms
-        - binary_sensor.template.publish:
-            id: usb_power_present
-            state: !lambda 'return id(vcc).has_state() && id(vcc).state > 4.25;'
-        - component.update: batterylevel
+        - if:
+            condition:
+              lambda: 'return id(timer_wake);'
+            then:
+              - script.execute: timer_checkin_script
+            else:
+              # Interactive: button wake or cold boot — stay awake until sleep button
+              - output.turn_on: backlight_gpio
+              # First ADC sample is otherwise delayed by update_interval (~60–120s)
+              - delay: 2s
+              - component.update: vcc
+              - delay: 500ms
+              - binary_sensor.template.publish:
+                  id: usb_power_present
+                  state: !lambda 'return id(vcc).has_state() && id(vcc).state > 4.25;'
+              - component.update: batterylevel
 
 esp32:
   board: esp32dev
@@ -95,27 +109,34 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  - id: timer_wake
+    type: bool
+    restore_value: no
+    initial_value: 'false'
 
 sensor:
   - platform: homeassistant
-    name: "Main Fridge Temperature"
-    entity_id: ${entity_main_fridge}
-    id: main_fridge_temp
+    name: "${label_1} Temperature"
+    entity_id: ${entity_1}
+    id: sensor_1
     unit_of_measurement: 'F'
 
   - platform: homeassistant
-    name: "Main Freezer Temperature"
-    entity_id: ${entity_main_freezer}
-    id: main_freezer_temp
+    name: "${label_2} Temperature"
+    entity_id: ${entity_2}
+    id: sensor_2
+    unit_of_measurement: 'F'
 
   - platform: homeassistant
-    name: "Kitchen Temperature"
-    entity_id: ${entity_kitchen}
-    id: kitchen_temp
+    name: "${label_3} Temperature"
+    entity_id: ${entity_3}
+    id: sensor_3
+    unit_of_measurement: 'F'
 
   - platform: homeassistant
-    entity_id: ${entity_office}
-    id: office_temp
+    name: "${label_4} Temperature"
+    entity_id: ${entity_4}
+    id: sensor_4
     unit_of_measurement: 'F'
 
   - platform: adc
@@ -167,8 +188,10 @@ sensor:
       else if (voltage >= 3.40) percentage = 10;
       else percentage = 5;
 
-      // Do NOT arm sleep if USB is present (threshold tuned for T-Display charge bump)
-      if (!id(usb_power_present).state &&
+      // Do NOT arm sleep if USB is present (threshold tuned for T-Display charge bump).
+      // Skip during timer check-in — that path re-sleeps itself after the OTA window.
+      if (!id(timer_wake) &&
+          !id(usb_power_present).state &&
           percentage < 30 &&
           id(last_low_battery_time) == 0) {
         id(last_low_battery_time) = millis();
@@ -177,10 +200,10 @@ sensor:
 
       return percentage;
 
-# Recoverable deep sleep: timer (1h) and button (GPIO35) can wake; never sleep forever.
+# Recoverable deep sleep: timer check-in + button (GPIO35) can wake.
 deep_sleep:
   id: deep_sleep_config
-  sleep_duration: 1h
+  sleep_duration: ${deep_sleep_duration}
   wakeup_pin:
     number: GPIO35
     inverted: true
@@ -191,6 +214,30 @@ deep_sleep:
   wakeup_pin_mode: IGNORE
 
 script:
+  # Silent timer wake: publish battery, linger for queued OTA, re-sleep (no backlight).
+  - id: timer_checkin_script
+    mode: single
+    then:
+      - wait_until:
+          condition:
+            wifi.connected:
+          timeout: 60s
+      - wait_until:
+          condition:
+            api.connected:
+          timeout: 30s
+      - component.update: vcc
+      - delay: 500ms
+      - binary_sensor.template.publish:
+          id: usb_power_present
+          state: !lambda 'return id(vcc).has_state() && id(vcc).state > 4.25;'
+      - component.update: batterylevel
+      # Window for Device Builder queued offline OTA to start/finish
+      - delay: 2min
+      - deep_sleep.enter:
+          id: deep_sleep_config
+          sleep_duration: ${deep_sleep_duration}
+
   - id: low_battery_script
     mode: restart
     then:
@@ -202,7 +249,7 @@ script:
           then:
             - deep_sleep.enter:
                 id: deep_sleep_config
-                sleep_duration: 1h
+                sleep_duration: ${deep_sleep_duration}
 
 binary_sensor:
   - platform: gpio
@@ -230,7 +277,7 @@ binary_sensor:
               - delay: 200ms
               - deep_sleep.enter:
                   id: deep_sleep_config
-                  sleep_duration: 1h
+                  sleep_duration: ${deep_sleep_duration}
 
   # Published from ADC on_value / on_boot (not a PollingComponent)
   - platform: template
@@ -264,23 +311,23 @@ display:
       int spacing = 57;   // Vertical spacing between entities
       int line_spacing = 1; // Additional space between the temperature value and the horizontal line
 
-      it.printf(2, y_offset, id(small_font), id(color_green), "Main Fridge:");
-      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(main_fridge_temp).state);
+      it.printf(2, y_offset, id(small_font), id(color_green), "${label_1}:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_1).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(2, y_offset, id(small_font), id(color_green), "Main Freezer:");
-      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(main_freezer_temp).state);
+      it.printf(2, y_offset, id(small_font), id(color_green), "${label_2}:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_2).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(2, y_offset, id(small_font), id(color_green), "Kitchen:");
-      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(kitchen_temp).state);
+      it.printf(2, y_offset, id(small_font), id(color_green), "${label_3}:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_3).state);
       it.horizontal_line(0, y_offset + spacing + line_spacing, 240, Color::WHITE);
 
       y_offset += spacing;
-      it.printf(2, y_offset, id(small_font), id(color_green), "Office:");
-      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(office_temp).state);
+      it.printf(2, y_offset, id(small_font), id(color_green), "${label_4}:");
+      it.printf(10, y_offset + 20, id(medium_font), Color::WHITE, "%.1f°F", id(sensor_4).state);
 
       if (id(batterylevel).has_state()) {
         int pct = (int) id(batterylevel).state;

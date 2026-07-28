@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-28
+
+### Added
+
+- **Silent timer check-in:** on RTC timer wake, keep the backlight off, wait for Wi‑Fi/API, publish battery, linger ~**2 minutes** for ESPHome Device Builder **queued offline OTA**, then re-sleep.
+- **`deep_sleep_duration` substitution** (default **`24h`**) shared by component default, button sleep, low-battery sleep, and timer re-sleep so forks can tune the interval in one place.
+- **`timer_wake` global** so low-battery auto-sleep is not armed during a short check-in.
+- **Generic row substitutions:** `label_1`…`label_4` and `entity_1`…`entity_4` (with matching `sensor_1`…`sensor_4` ids) so forks are not tied to fridge/kitchen naming.
+
+### Changed
+
+- **Deep sleep interval:** **`1h` → `24h`** by default (was waking hourly and staying on with the screen lit until a button press).
+- **Boot paths:** button wake / cold boot stay **interactive** (backlight on) until sleep button **release**; only timer wakes use the silent check-in script.
+- **Forkability:** display row titles come from **`label_*`**; Home Assistant `entity_id` values from **`entity_*`** (example defaults still use the fridge/kitchen sensors).
+- **README:** document interactive vs silent wake, queued OTA window, `deep_sleep_duration`, and generic row substitutions.
 ## [1.2.0] - 2026-07-25
 
 ### Changed

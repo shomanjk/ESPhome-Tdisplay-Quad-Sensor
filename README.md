@@ -1,6 +1,6 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
-**Release 1.2.0** — ESPHome 2026.7 display/ADC migration and recoverable deep sleep (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.2.0`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
+**Release 1.3.0** — 24h silent timer check-in (battery + queued OTA window) with button-only interactive stay-awake (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.3.0`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
 
 Four Home Assistant temperature entities, battery gauge, and a USB-power indicator on the original **LilyGO T-Display** (ESP32). Prebuilt firmware is published via GitHub Pages and [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for browser-based install.
 
@@ -27,11 +27,11 @@ If you **forked** this repo, use your own Pages URL once Actions publishing work
 
 - **Hardware:** Original **LilyGO T-Display** (ESP32). This config has **not** been tested on T-Display *S3* or other variants.
 - **ESPHome:** **Pages** and **CI** both compile with **current stable**. Treat **2026.7.2** as the **last explicitly verified** release in this repo; use **stable** locally. Older ESPHome (before the `mipi_spi` T-Display model and stock ADC) will not match this YAML.
-- **Home Assistant:** The device uses the **native API** (`api:`). Edit the four **`substitutions`** at the top of [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml) (and `unit_of_measurement` if you do not use °F) to match your entities.
+- **Home Assistant:** The device uses the **native API** (`api:`). Edit **`label_1`…`label_4`** and **`entity_1`…`entity_4`** (and `unit_of_measurement` if you do not use °F) at the top of [`lilygoT-Display-QuadSensor.yaml`](lilygoT-Display-QuadSensor.yaml). Optional: change **`deep_sleep_duration`** (default **`24h`**) for more or less frequent silent check-ins.
 
 ## What appears on the display
 
-Four labeled rows (**Main Fridge**, **Main Freezer**, **Kitchen**, **Office**) with live values, a **battery** outline with fill and percentage, and a yellow **⚡** when USB power is detected (TTGO T-Display behavior).
+Four labeled rows (defaults: **Main Fridge**, **Main Freezer**, **Kitchen**, **Office** — set via `label_1`…`label_4`) with live values, a **battery** outline with fill and percentage, and a yellow **⚡** when USB power is detected (TTGO T-Display behavior).
 
 <img src="QuadSensor-Tdisplay.jpg" alt="Quad Sensor Display screenshot" width="300"/>
 
@@ -47,7 +47,7 @@ Four labeled rows (**Main Fridge**, **Main Freezer**, **Kitchen**, **Office**) w
 ## Instructions
 
 1. Use the **[installer page](#install-prebuilt-firmware-web)** above (same URL as in that section).
-2. **Local builds:** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard with this YAML). Set the four `substitutions` entity IDs to your Home Assistant entities.
+2. **Local builds:** Copy `secrets.yaml.example` → `secrets.yaml`, set Wi‑Fi, then run `esphome compile lilygoT-Display-QuadSensor.yaml` (or use the ESPHome dashboard with this YAML). Set `label_*` / `entity_*` substitutions to your Home Assistant entities.
 
 ### If you fork: enable GitHub Pages
 
@@ -57,13 +57,18 @@ The workflow **builds** firmware and **deploys** to Pages on **every push to `ma
 
 ## Buttons and sleep
 
-With the **USB port at the bottom**, release the button at the **bottom right** (**GPIO35**) to enter **deep sleep** for **1 hour** (or until you press the same button again to wake). Low battery (< 30%, and not on USB) waits **3 minutes**, then sleeps for **1 hour** the same way—never with zero wake sources.
+With the **USB port at the bottom**, release the button at the **bottom right** (**GPIO35**) to enter **deep sleep** for **`deep_sleep_duration`** (default **24 hours**). Press the same button again to wake for interactive use: backlight on, stay awake until you release the sleep button again.
+
+**Timer wake (default every 24h):** silent check-in — **no backlight**, connect Wi‑Fi/API, publish battery, linger ~**2 minutes** so ESPHome Device Builder **queued offline OTA** can land, then re-sleep. Cold boot / power-on stays interactive like a button wake.
+
+Low battery (< 30%, and not on USB) waits **3 minutes**, then sleeps for the same duration—never with zero wake sources.
 
 Sleep is entered on **button release** (not press) so the wake pin is inactive when EXT0 is armed. After a button wake, the first release is ignored so the device does not immediately re-sleep.
 
 ## Technical notes (forks / maintainers)
 
 - **Display:** `mipi_spi` / `model: T-DISPLAY`; backlight on **GPIO4** (`output` + `on_boot`). Do not use deprecated `st7789v` on current ESPHome.
+- **Deep sleep:** `sleep_duration` comes from substitution **`deep_sleep_duration`**; GPIO35 `wakeup_pin` with `wakeup_pin_mode: IGNORE`.
 - **Battery / USB:** `adc` on **GPIO34** with a `multiply` filter for the onboard divider; USB present when VBatt **> 4.25 V**. Fonts: `COPYRIGHT` in the `.bdf` files under `fonts/`; the USB bolt uses **Noto Sans Symbols 2** (`fonts/NotoSansSymbols2-Regular.ttf`, OFL in `fonts/OFL-NotoSansSymbols2.txt`).
 
 ## Other files
