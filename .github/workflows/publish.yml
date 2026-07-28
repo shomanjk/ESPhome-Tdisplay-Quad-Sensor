@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'The version of the firmware to build'
+        description: 'The version of the firmware to build (sets project.version)'
         required: true
 
 jobs:
   # Inline build (not esphome/workflows reusable) so we can `cp secrets.yaml.example secrets.yaml`
-  # before compile; lilygoT-Display-QuadSensor.yaml uses !secret for Wi‑Fi.
+  # before compile; core YAML uses !secret for Wi‑Fi.
   build-firmware:
     name: Build Firmware
     runs-on: ubuntu-latest
@@ -29,11 +29,17 @@ jobs:
           VERSION="${{ github.event_name == 'workflow_dispatch' && inputs.version || '' }}"
           if [ -z "$VERSION" ]; then VERSION="dev-$(date +'%Y%m%d-%H%M')"; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Inject project.version into factory YAML
+        run: |
+          # Keep project.name; replace project.version for this build
+          sed -i 's/^\([[:space:]]*version:\).*/\1 "'"${{ steps.version.outputs.version }}"'"/' \
+            lilygoT-Display-QuadSensor.factory.yaml
+          grep -A2 'project:' lilygoT-Display-QuadSensor.factory.yaml
       - name: Build Firmware
         uses: esphome/build-action@v7.2.0
         id: esphome-build
         with:
-          yaml-file: lilygoT-Display-QuadSensor.yaml
+          yaml-file: lilygoT-Display-QuadSensor.factory.yaml
           # Prebuilt firmware tracks current stable; config last verified on ESPHome 2026.7.2 (see README).
           version: stable
           complete-manifest: true

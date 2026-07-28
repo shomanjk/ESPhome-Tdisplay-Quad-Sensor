@@ -16,8 +16,8 @@ jobs:
         uses: actions/checkout@v6.0.2
       - name: Dummy secrets for CI
         run: cp secrets.yaml.example secrets.yaml
-      - name: ESPHome compile
+      - name: ESPHome compile (factory includes core)
         uses: esphome/build-action@v7.2.0
         with:
-          yaml-file: lilygoT-Display-QuadSensor.yaml
+          yaml-file: lilygoT-Display-QuadSensor.factory.yaml
           version: stable
