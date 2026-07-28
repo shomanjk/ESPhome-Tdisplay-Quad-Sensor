@@ -262,11 +262,11 @@ script:
       - component.update: batterylevel
       # Window for Device Builder queued offline OTA to start/finish
       - delay: 2min
-      # Clear + flush NVS before sleep — assignment alone may not persist before
-      # deep_sleep.enter (restored globals sync on loop / flash_write_interval).
-      - lambda: |-
-          id(resume_silent_checkin) = false;
-          global_preferences->sync();
+      # Clear, yield so GlobalsComponent can stage the change (update_interval
+      # default 1s), then flush NVS before deep_sleep.enter.
+      - lambda: 'id(resume_silent_checkin) = false;'
+      - delay: 2s
+      - lambda: 'global_preferences->sync();'
       - delay: 250ms
       - deep_sleep.enter:
           id: deep_sleep_config
