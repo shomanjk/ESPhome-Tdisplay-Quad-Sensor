@@ -1,6 +1,6 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
-**Release 1.4.2** — silent check-in survives queued OTA reboot; low-battery sleep re-arms after USB cancel; safer row labels (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.4.2`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
+**Release 1.4.3** — flush silent-resume flag before timer sleep; factory `project.version` aligned (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.4.3`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
 
 Four Home Assistant sensor values on the original **LilyGO T-Display** (ESP32), plus a battery gauge and USB-power indicator. Typical use cases include **refrigerator / freezer / room temperatures** (the demo substitutions), or any four numeric HA entities you prefer.
 

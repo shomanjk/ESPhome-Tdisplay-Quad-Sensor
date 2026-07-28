@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-07-28
+
+### Fixed
+
+- **Silent-resume flag flush:** clear `resume_silent_checkin` and call `global_preferences->sync()` (plus a short delay) before timer re-sleep so `false` is committed to NVS ([#11](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/pull/11) Codex review).
+- **Factory `project.version`:** bump to **1.4.3** in [`lilygoT-Display-QuadSensor.factory.yaml`](lilygoT-Display-QuadSensor.factory.yaml) so local/CI factory builds match the release (Publish already rewrote this at deploy time).
+
 ## [1.4.2] - 2026-07-28
 
 ### Fixed
