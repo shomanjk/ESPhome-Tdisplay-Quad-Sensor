@@ -1,4 +1,4 @@
-# ESPHome: use current stable; last verified on 2026.7.2 (see README).
+# ESPHome: use current stable; last verified on 2026.7.3 (see README).
 substitutions:
   # Forkers: change labels and Home Assistant entity IDs for each row
   label_1: "Main Fridge"
