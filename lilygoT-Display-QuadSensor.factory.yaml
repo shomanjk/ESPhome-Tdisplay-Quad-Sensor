@@ -9,7 +9,7 @@ esphome:
   project:
     name: shomanjk.tdisplay-quad-sensor
     # Publish workflow overwrites this for dated/dev and release builds
-    version: "1.4.0"
+    version: "1.4.1"
 
 # After Wi‑Fi + API, ESPHome Device Builder can Adopt this package URL
 dashboard_import:
