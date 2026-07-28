@@ -1,6 +1,6 @@
 # ESPHome: LilyGO T-Display quad sensor dashboard
 
-**Release 1.4.1** — factory web install with **Improv Serial** Wi‑Fi and **Adopt** into ESPHome Device Builder (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.4.1`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
+**Release 1.4.2** — silent check-in survives queued OTA reboot; low-battery sleep re-arms after USB cancel; safer row labels (see [CHANGELOG.md](CHANGELOG.md)). When publishing on GitHub, create tag **`v1.4.2`** (see [Releases](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor/releases)).
 
 Four Home Assistant sensor values on the original **LilyGO T-Display** (ESP32), plus a battery gauge and USB-power indicator. Typical use cases include **refrigerator / freezer / room temperatures** (the demo substitutions), or any four numeric HA entities you prefer.
 
@@ -80,7 +80,7 @@ The workflow **builds** firmware and **deploys** to Pages on **every push to `ma
 
 With the **USB port at the bottom**, release the button at the **bottom right** (**GPIO35**) to enter **deep sleep** for **`deep_sleep_duration`** (default **24 hours**). Press the same button again to wake for interactive use: backlight on, stay awake until you release the sleep button again.
 
-**Timer wake (default every 24h):** silent check-in — **no backlight**, connect Wi‑Fi/API, publish battery, linger ~**2 minutes** so ESPHome Device Builder **queued offline OTA** can land, then re-sleep. Cold boot / power-on stays interactive like a button wake.
+**Timer wake (default every 24h):** silent check-in — **no backlight**, connect Wi‑Fi/API, publish battery, linger ~**2 minutes** so ESPHome Device Builder **queued offline OTA** can land, then re-sleep. If OTA reboots mid-window, the next boot stays on the silent path (no backlight) until check-in finishes. Cold boot / power-on stays interactive like a button wake.
 
 Low battery (< 30%, and not on USB) waits **3 minutes**, then sleeps for the same duration—never with zero wake sources.
 
