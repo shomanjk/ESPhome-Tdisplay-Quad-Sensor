@@ -1,0 +1,29 @@
+---
+description: Wait for and triage Codex PR review before merging when Codex is enabled
+alwaysApply: true
+---
+
+# Codex PR pre-merge gate
+
+When opening, updating, or merging a **pull request** on a GitHub repo that has **Codex** (chatgpt-codex-connector / `@codex`) review enabled — including [ESPhome-Tdisplay-Quad-Sensor](https://github.com/shomanjk/ESPhome-Tdisplay-Quad-Sensor) and any other repo where Codex comments appear on PRs:
+
+## Required order
+
+1. Push the PR branch and open/update the PR.
+2. Wait for **CI** required checks to finish.
+3. Wait for **Codex review** to post (review summary and/or inline comments). If nothing appears after CI is green, trigger with a PR comment: `@codex review`.
+4. **Triage every Codex comment** before merge:
+   - **Fix** actionable P1/P2 issues in the same PR (or clearly defer with a tracked follow-up only if the user agrees).
+   - **Reply** on each thread with what you did or why you are not changing it.
+5. Only then merge, tag, and run Publish/release workflows.
+
+## Do not
+
+- Merge solely because CI is green while Codex is still pending or unread.
+- Ship a “follow-up release later” for issues Codex already flagged on the open PR, unless the user explicitly chooses that.
+- Treat Codex as optional noise on release PRs for firmware / device YAML.
+
+## How to detect Codex is enabled
+
+- Inline review comments from `chatgpt-codex-connector[bot]`, or a “Codex Review” summary on the PR.
+- Repo settings / prior PRs showing Codex reviews.
