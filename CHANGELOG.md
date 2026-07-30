@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **VBatt ADC:** `samples: 8` with fixed `attenuation: 12db` (auto is incompatible with multisampling) so each update averages multiple reads in one poll — reduces 10%‑bucket flicker without a multi‑interval filter.
+
 ## [1.4.3] - 2026-07-28
 
 ### Fixed
