@@ -149,7 +149,8 @@ sensor:
 
   - platform: adc
     pin: GPIO34
-    attenuation: auto
+    # Fixed attenuation required when samples > 1 (auto is incompatible with multisampling)
+    attenuation: 12db
     name: VBatt
     id: vcc
     update_interval: 60s
