@@ -6,6 +6,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **VBatt ADC:** `samples: 8` so each update (including silent timer check-in) averages multiple reads in one poll — reduces 10%‑bucket flicker without a multi‑interval filter.
 - Updated device photo (`QuadSensor-Tdisplay.jpg`) on the README and GitHub Pages installer.
 
 ## [1.4.1] - 2026-07-28

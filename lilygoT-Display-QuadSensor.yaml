@@ -153,6 +153,8 @@ sensor:
     name: VBatt
     id: vcc
     update_interval: 60s
+    # Average N reads in one poll so a single check-in update is less noisy
+    samples: 8
     filters:
       - multiply: 2  # Adjust for the voltage divider 2.02695
     on_value:
